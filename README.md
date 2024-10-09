@@ -1,3 +1,8 @@
+---
+output:
+  html_document: default
+---
+
 # LRAPA
 
 The pipeline for APA analysis using bulk and single-cell long-read RNA sequencing data.
@@ -9,6 +14,22 @@ Edited in 08/16/2024
 **Workflow of LRAPA:**
 
 ![](images/APA_workflow.png)
+
+## Installation 
+
+You can install the package using the following command:
+
+```         
+# Clone the repository 
+git clone https://github.com/yalanyang/lrapa.git
+cd lrapa
+# Create and activate a conda environment
+conda env create -f environment.yml
+conda activate lrapa
+# Install necessary dependencies
+conda install -c bioconda environment.yml
+chmod +x lrapa # Make the script executable
+```
 
 ## **Step 0: Pre-processing of the long-read CCS reads.**
 
@@ -121,7 +142,7 @@ Rscript $codes/3.PAS_count_Per_sample.R -b N1.bam,N2.bam,C1.bam,C2.bam -p test.P
 The output count format:
 
 |                                  | C1  | C2  | C3  | N1  | N2  | N3  | Feature | gene_name |             UTR_id              |       PAS_ID        |
-|:--------------------------------:|:---:|:---:|:---:|:---:|:---:|:---:|:-------:|:---------:|:-------------------------------:|:-------------------:|
+|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
 | chr11_35229465_35229470\_+\_3UTR | 16  | 30  | 22  | 12  | 10  |  8  |  3UTR   |   CDC44   | CD44:chr11:35229288:35232402:u2 | chr11_35229470_3UTR |
 | chr11_35230014_35230028\_+\_3UTR | 69  | 50  | 54  | 34  | 32  | 22  |  3UTR   |   CDC44   | CD44:chr11:35229288:35232402:u2 | chr11_35230028_3UTR |
 | chr11_35232387_35232403\_+\_3UTR | 140 | 160 | 155 | 310 | 440 | 550 |  3UTR   |   CDC44   | CD44:chr11:35229288:35232402:u2 | chr11_35232403_3UTR |
