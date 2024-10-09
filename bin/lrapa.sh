@@ -1,0 +1,198 @@
+#!/bin/bash
+
+# This is the main CLI wrapper for your tool
+function=$1  # The first argument specifies the function to run
+
+if [ -z "$function" ]; then
+    echo "Error: No function specified."
+    echo "Usage: $0 {filter|anno|count|diff|norepdiff|scCount|couplingTSS|couplingExon} [options]"
+    exit 1
+fi
+
+# Check for help option right after function assignment
+if [[ "$function" == "--help" || "$function" == "-h" ]]; then
+    echo "Usage: $0 {filter|anno|count|diff|norepdiff|scCount|couplingTSS|couplingExon} [options]"
+    echo
+        echo "Functions:"
+        echo "  filter        Filtering for long-reads with authentic polyA tails."
+        echo "                Arguments:"
+        echo "                  -i, --input: Input mapped BAM file (required)."
+        echo "                  -o, --hq: Output HQ qname file (default: 'HQ.qname.txt')."
+        echo "                  -r, --reference: Reference genome FASTA file (required)."
+        echo "                  -f, --flank_size: Flank size on either side of the mapped end position for internal priming (default: 10)."
+        echo "                  -c, --cores: Number of cores to use for parallel processing (default: 4)."
+        echo "                  -a, --adjacent_size: Flank size to search for PAS signal (default: 40)."
+        echo "                  -b, --batch_size: Number of reads to process in each batch (default: 10000)."                
+        echo
+        echo "  anno          Run PAS identification and annotation."
+        echo "                Arguments:"
+        echo "                  -i, --input: Input BAM file (required)."
+        echo "                  -r, --reference: Reference genome FASTA file (required)."
+        echo "                  -g, --gtf: Reference annotation gtf file (required)."
+        echo "                  -f, --flank_size: Flank size to search for PAS signal (default: 40)."
+        echo "                  -u, --utr: Reference annotation 3'-UTR file (required)."
+        echo "                  -o, --output: Output PAS bed file with header (required)."
+        echo
+        echo "  count         Count PAS reads per sample."
+        echo "                Arguments:"
+        echo "                  -b, --bam_files: Comma-separated list of input BAM files (required)."
+        echo "                  -p, --pas: PAS reference TXT file with BED columns followed by annotations (required)."
+        echo "                  -o, --output: Output text file for the count matrix (required)."
+        echo
+        echo "  diff          Differential analysis using DRIMSeq."
+        echo "                Arguments:"
+        echo "                  -i, --input: Count file of PAS sites (required)."
+        echo "                  -s, --sample: Sample information (required)."
+        echo "                  -c, --group1: Group 1 for differential analysis (required)."
+        echo "                  -n, --group2: Group 2 for differential analysis (required)."
+        echo
+        echo "  norepdiff     Differential analysis without replicates."
+        echo "                Arguments:"
+        echo "                  -i, --input: Count file of PAS sites (required)."
+        echo "                  -c, --group1: Sample 1 for differential analysis (required)."
+        echo "                  -n, --group2: Sample 2 for differential analysis (required)."    
+        echo
+        echo "  scCount       Count PAS reads per cell using scRNA-seq data."
+        echo "                Arguments:"
+        echo "                  -b, --bam_files: Input scRNA-seq BAM file (required)."
+        echo "                  -p, --pas: PAS reference TXT file with BED columns followed by annotations (required)."
+        echo "                  -o, --output: Output folder for the count matrix (required)."
+        echo "                  -w, --barcode: Hitlist barcodes."
+        echo
+        echo "  couplingTSS   Coupling PAS with TSS regions."
+        echo "                Arguments:"
+        echo "                  -i, --input: Input full-length BAM file (required)."
+        echo "                  -g, --gtf: Reference annotation GTF file (required)."
+        echo "                  -p, --pas: Reference PAS bed (required)."
+        echo "                  -o, --output: Output TSS-exon coordination file."
+        echo
+        echo "  couplingExon  Coupling PAS with exons."
+        echo "                Arguments:"
+        echo "                  -i, --input: Input full-length BAM file (required)."
+        echo "                  -g, --gtf: Reference annotation GTF file (required)."
+        echo "                  -p, --pas: Reference PAS bed (required)."
+        echo "                  -o, --output: Output PAS-exon couplings file."
+        echo
+fi
+
+shift  # Shift arguments to access the remaining ones
+
+
+# Switch case for handling different steps in the tool
+case "$function" in
+    "filter")
+        if [ "$#" -lt 2 ]; then
+            echo "Error: At least two arguments are required for the filter step."
+            echo "Usage: $0 filter -i mapped.bam -o test.HQ.qname.txt -r ref.fa"
+            echo "                Arguments:"
+            echo "                  -i, --input: Input mapped BAM file (required)."
+            echo "                  -o, --hq: Output HQ qname file (default: 'HQ.qname.txt')."
+            echo "                  -r, --reference: Reference genome FASTA file (required)."
+            echo "                  -f, --flank_size: Flank size on either side of the mapped end position for internal priming (default: 10)."
+            echo "                  -c, --cores: Number of cores to use for parallel processing (default: 4)."
+            echo "                  -a, --adjacent_size: Flank size to search for PAS signal (default: 40)."
+            echo "                  -b, --batch_size: Number of reads to process in each batch (default: 10000)."    
+            exit 1
+        fi
+        Rscript scripts/1_get_PAS_reads.0.2.R "$@"
+        ;;
+    "anno")
+        if [ "$#" -lt 5 ]; then
+            echo "Error: At least five arguments are required for the anno step."
+            echo "Usage: $0 anno -i test.bam -r ref.fa -g ref.gtf -u 3utr.bed -o pas.bed"
+            echo "                Arguments:"
+            echo "                  -i, --input: Input BAM file (required)."
+            echo "                  -r, --reference: Reference genome FASTA file (required)."
+            echo "                  -g, --gtf: Reference annotation gtf file (required)."
+            echo "                  -f, --flank_size: Flank size to search for PAS signal (default: 40)."
+            echo "                  -u, --utr: Reference annotation 3'-UTR file (required)."
+            echo "                  -o, --output: Output PAS bed file with header (required)."
+            exit 1
+        fi
+        Rscript scripts/2_PAS_identification_Annotation_0.3.R "$@"
+        ;;
+    "count")
+        if [ "$#" -lt 3 ]; then
+            echo "Error: At least three arguments are required for the count step."
+            echo "Usage: $0 count -i test1.bam,test2.bam -p test.PAS.bed -o test.PAS.count.txt"
+            echo "                Arguments:"
+            echo "                  -b, --bam_files: Comma-separated list of input BAM files (required)."
+            echo "                  -p, --pas: PAS reference TXT file with BED columns followed by annotations (required)."
+            echo "                  -o, --output: Output text file for the count matrix (required)."
+            exit 1
+        fi
+        Rscript scripts/3_PAS_count_Per_sample.R "$@"
+        ;;
+    "diff")
+        if [ "$#" -lt 4 ]; then
+            echo "Error: At least four arguments are required for the diff step."
+            echo "Usage: $0 diff -i test.PAS.count.txt -s sample.txt -c case -n control"
+            echo "                Arguments:"
+            echo "                  -i, --input: Count file of PAS sites (required)."
+            echo "                  -s, --sample: Sample information (required)."
+            echo "                  -c, --group1: Group 1 for differential analysis (required)."
+            echo "                  -n, --group2: Group 2 for differential analysis (required)."
+        exit 1
+        fi
+        Rscript scripts/4.1_diff.DRIMSeq_0.2.R "$@"
+        ;;
+    "norepdiff")
+        if [ "$#" -lt 4 ]; then
+            echo "Error: At least four arguments are required for the norepdiff step."
+            echo "Usage: $0 norepdiff -c test.PAS.count.txt -n N1 -g C1"
+            echo "                Arguments:"
+            echo "                  -i, --input: Count file of PAS sites (required)."
+            echo "                  -c, --group1: Sample 1 for differential analysis (required)."
+            echo "                  -n, --group2: Sample 2 for differential analysis (required)."   
+            exit 1
+        fi
+        Rscript scripts/4.0_DE_test.norep_0.2.R "$@"
+        ;;
+    "scCount")
+        if [ "$#" -lt 4 ]; then
+            echo "Error: At least four arguments are required for the scCount step."
+            echo "Usage: $0 scCount -b scLR.bam -p PAS.bed -o RUN3 -w barcode.rev.txt"
+            echo "                Arguments:"
+            echo "                  -b, --bam_files: Input scRNA-seq BAM file (required)."
+            echo "                  -p, --pas: PAS reference TXT file with BED columns followed by annotations (required)."
+            echo "                  -o, --output: Output folder for the count matrix (required)."
+            echo "                  -w, --barcode: Hitlist barcodes."
+            exit 1
+        fi
+        Rscript scripts/3_PAS_count_sc_sample_0.3.R "$@"
+        ;;
+    "couplingTSS")
+        if [ "$#" -lt 4 ]; then
+            echo "Error: At least four arguments are required for the couplingTSS step."
+            echo "Usage: $0 couplingTSS -i test.bam -g ref.gtf -p PAS.bed -o TSS-PAS.coordination.txt"
+            echo "  couplingTSS   Coupling PAS with TSS regions."
+            echo "                Arguments:"
+            echo "                  -i, --input: Input full-length BAM file (required)."
+            echo "                  -g, --gtf: Reference annotation GTF file (required)."
+            echo "                  -p, --pas: Reference PAS bed (required)."
+            echo "                  -o, --output: Output TSS-exon coordination file."
+            exit 1
+        fi
+        Rscript scripts/5_PAS_TSS_pair_V2.R "$@"
+        ;;
+    "couplingExon")
+        if [ "$#" -lt 4 ]; then
+            echo "Error: At least four arguments are required for the couplingExon step."
+            echo "Usage: $0 couplingExon -i full_length.bam -g ref.gtf -p PAS.bed -o PAS-exon.coordination.txt"
+            echo "  couplingExon  Coupling PAS with exons."
+            echo "                Arguments:"
+            echo "                  -i, --input: Input full-length BAM file (required)."
+            echo "                  -g, --gtf: Reference annotation GTF file (required)."
+            echo "                  -p, --pas: Reference PAS bed (required)."
+            echo "                  -o, --output: Output PAS-exon couplings file."
+            exit 1
+        fi
+        Rscript scripts/5_PAS_exon_pair_V2.R "$@"
+        ;;
+    
+    *)
+        echo "Error: Unknown function: $function"
+        echo "Usage: $0 {filter|anno|count|diff|norepdiff|scCount|couplingTSS|couplingExon} [options]"
+        exit 1
+        ;;
+esac
