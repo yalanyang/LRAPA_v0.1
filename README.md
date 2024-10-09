@@ -21,13 +21,23 @@ You can install the package using the following command:
 
 ```         
 # Clone the repository 
-git clone https://github.com/yalanyang/lrapa.git
-cd lrapa
+git clone https://github.com/yalanyang/LRAPA_v0.1.git
+cd LRAPA_v0.1
 # Create and activate a conda environment
-conda env create -f environment.yml
-conda activate lrapa
+conda config --add channels conda-forge
+conda config --add channels bioconda
+conda config --add channels r
+
 # Install necessary dependencies
-conda install -c bioconda environment.yml
+conda create -n lrapa -f environment.yml
+conda activate lrapa
+
+#in your R session, install these Bioconductor packages:
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install(c("rtracklayer", "Rsamtools", "GenomicAlignments", "Biostrings", "DRIMSeq", "plyranges"))
+
 chmod +x lrapa # Make the script executable
 ```
 
@@ -80,7 +90,7 @@ samtools view -O BAM -F 2052 -h test.fl_flipped.filter.bam |  samtools sort -O B
 The 12 PAS hexamers used here are "AATAAA", "TTTAAA", "AAGAAA", "AACAAA", "TATAAA", "AATGAA", "ATTAAA", "AGTAAA", "AATATA", "CATAAA", "ACTAAA", "GATAAA", which is adopted from [our previous study.](https://genome.cshlp.org/content/33/10/1774.full)
 
 ``` shell
-Rscript $codes/1_get_PAS_reads.0.2.R -i test.fl_flipped.unique.bam -r $reference/GRCh38.primary_assembly.genome.fa -o test.HQ.qname.txt
+lrapa filter -i test.fl_flipped.unique.bam -r $reference/GRCh38.primary_assembly.genome.fa -o test.HQ.qname.txt
 ```
 
 **Parameters**
@@ -113,7 +123,7 @@ samtools view -bS test.HQ.header.sam > test.HQ.bam
 > **reference**: Bin Tian, Jun Hu, Haibo Zhang, Carol S. Lutz, A large-scale analysis of mRNA polyadenylation of human and mouse genes, *Nucleic Acids Research*, Volume 33, Issue 1, 1 January 2005, Pages 201--212. <https://doi.org/10.1093/nar/gki158>
 
 ``` r
-Rscript $codes/2.PAS_identification_Annotation_0.2.R -i test.HQ.bam -r $reference/GRCh38.primary_assembly.genome.fa -g $reference/hg38.refGene.gtf -u $reference/hg38.refGene.3utr_merge.bed -o test.PAS.bed
+lrapa anno -i test.HQ.bam -r $reference/GRCh38.primary_assembly.genome.fa -g $reference/hg38.refGene.gtf -u $reference/hg38.refGene.3utr_merge.bed -o test.PAS.bed
 ```
 
 **Note:** The hg38.refGene.3utr_merge.bed was generated using the get3UTR_0.1.R script. if you find that this script needs a lot of memory or very slow you may want to split the input bam file by chromosome and run these separately. We do intend to improve this.
@@ -130,7 +140,7 @@ Rscript $codes/2.PAS_identification_Annotation_0.2.R -i test.HQ.bam -r $referenc
 ## **Step 3: PAS count across samples**
 
 ``` shell
-Rscript $codes/3.PAS_count_Per_sample.R -b N1.bam,N2.bam,C1.bam,C2.bam -p test.PAS.bed -o test.PAS.count.txt
+lrapa count -b N1.bam,N2.bam,C1.bam,C2.bam -p test.PAS.bed -o test.PAS.count.txt
 ```
 
 **Parameters**
@@ -146,6 +156,22 @@ The output count format:
 | chr11_35229465_35229470\_+\_3UTR | 16  | 30  | 22  | 12  | 10  |  8  |  3UTR   |   CDC44   | CD44:chr11:35229288:35232402:u2 | chr11_35229470_3UTR |
 | chr11_35230014_35230028\_+\_3UTR | 69  | 50  | 54  | 34  | 32  | 22  |  3UTR   |   CDC44   | CD44:chr11:35229288:35232402:u2 | chr11_35230028_3UTR |
 | chr11_35232387_35232403\_+\_3UTR | 140 | 160 | 155 | 310 | 440 | 550 |  3UTR   |   CDC44   | CD44:chr11:35229288:35232402:u2 | chr11_35232403_3UTR |
+
+## **Step 3.1:** Count PAS reads per cell using scRNA-seq data.
+
+``` shell
+lrapa scCount -b scLR.bam -p PAS.bed -o RUN3 -w barcode.rev.txt
+```
+
+**Parameters**
+
+-   `-i, --input`: Input scRNA-seq BAM file (required).
+
+-   `-p, --pas`: PAS reference TXT file with BED columns followed by annotations (required).
+
+-   `-o, --output`: Output folder for the count matrix (required).
+
+-   `-w, --barcode`: Hitlist barcodes.
 
 ## **Step 4: Differential APA analysis**
 
@@ -176,7 +202,7 @@ We used a Benjamini--Hochberge correction for multiple testing.
 If a gene's absolute mean difference of DPAU/gDPAU is \>0.3 and adjusted *P* value is \< 0.01 between two groups, the gene's APA change between two groups will be deemed as significant.
 
 ``` shell
-Rscript $codes/4.0_DE_test.norep.R -c test.PAS.count.txt -n N1 -g C1
+lrapa norepdiff -c test.PAS.count.txt -n N1 -g C1
 ```
 
 **Parameters**
@@ -192,7 +218,7 @@ Rscript $codes/4.0_DE_test.norep.R -c test.PAS.count.txt -n N1 -g C1
 ### With replicates
 
 ``` shell
-Rscript $codes/4.1_diff.DRIMSeq_0.2.R -i test.PAS.count.txt -s sample.txt -c case -n control
+lrapa diff -i test.PAS.count.txt -s sample.txt -c case -n control
 ```
 
 This module performs differential APA usage analyses between exactly two conditions with two or more replicates based the R package [DRIMSeq](http://bioconductor.org/packages/release/bioc/html/DRIMSeq.html). This is done by testing if the ratio of APA changes between conditions.
@@ -232,7 +258,7 @@ Example file of sample information
 We counted 5ʹ-3ʹ isoforms using GenomicFeatures. Each Pacbio cDNA read was assigned to a TSS in a window of 50 nt and to a PAS. Only the reads that mapped to both features were retained and considered full-length reads. Counts were summarized in 5ʹ-3ʹ isoforms, resulting in counts for each 5ʹ-3ʹ combination.
 
 ``` shell
-Rscript $codes/5_PAS_TSS_pair_V2.R -i test.mapping.bam -g hg38.refGene.gtf -p test.PAS.bed -o TSS-PAS.coordination.txt
+lrapa couplingTSS -i test.mapping.bam -g hg38.refGene.gtf -p test.PAS.bed -o TSS-PAS.coordination.txt
 ```
 
 TSS: Transcriptional start site
@@ -264,7 +290,7 @@ At this step, we first extract skipped exons from the reference gtf annotation f
 Using this read to feature assignment, we counted the number of reads assigned to a given polyA site and divided them into reads including a particular exon or skipping the exon. Testing for exon--end site coordination were performed using a χ2 test. For each test, a n × 2 matrix per SE was generated, with the n polyA forming rows and inclusion and exclusion counts forming columns. Finally, we used a Benjamini--Hochberge correction for multiple testing and reported the FDR value.
 
 ``` shell
-Rscript $codes/5_PAS_exon_pair_V2.R -i test.full_length.bam -g hg38.refGene.gtf -p test.PAS.bed -o PAS-exon.coordination.txt
+lrapa couplingExon -i test.full_length.bam -g hg38.refGene.gtf -p test.PAS.bed -o PAS-exon.coordination.txt
 ```
 
 **Options**
