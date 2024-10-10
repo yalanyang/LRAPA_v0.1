@@ -1,8 +1,3 @@
----
-output:
-  html_document: default
----
-
 # LRAPA
 
 The pipeline for APA analysis using bulk and single-cell long-read RNA sequencing data.
@@ -41,7 +36,7 @@ BiocManager::install(c("rtracklayer", "Rsamtools", "GenomicAlignments", "Biostri
 chmod +x lrapa # Make the script executable
 ```
 
-## **Step 0: Pre-processing of the long-read CCS reads.**
+## **0. Pre-processing of the long-read CCS reads.**
 
 Here, we used one of the three cerebellum samples downloaded from [Pacbio](https://downloads.pacbcloud.com/public/dataset/Kinnex-full-length-RNA/) as test data.
 
@@ -56,26 +51,25 @@ isoseq3 refine test.fl.IsoSeqX_bc04_5p--IsoSeqX_3p.bam IsoSeq_v2_primers_12.fast
 
 Then we convert the full-length bam file into sam format and run the [flip_reads.py](https://github.com/mortazavilab/ENCODE-references/tree/master) script to orient the reads to the correct strand (since lima\--ccs does not do this, recommend by [Encode long-read pipeline](https://www.encodeproject.org/documents/6d583a1d-d692-4511-b13b-c051822d861c/@@download/attachment/ENCODE%20Long%20Read%20RNA-Seq%20Analysis%20Pipeline%20v3.2%20%28Human%29.pdf)).
 
-**Note**: we didn't trim polyA tails here, because we need to assess whether each read contain a genuine polyA signal based on the length and the base composition of its polyA tail.
-
 ``` shell
 samtools view -h test.refine.bam > test.refine.sam
 python flip_reads.py --f test.refine.sam --o test.fl_flipped.sam
 samtools view -bS test.fl_flipped.sam > test.fl_flipped.bam
+isoseq3 refine test.fl_flipped.bam PB_adapters.fasta test.flnc.bam
 ```
+
+**Note**: we didn't trim polyA tails here, because we need to assess whether each read contain a genuine polyA signal based on the length and the base composition of its polyA tail.
 
 We next align the long-reads to the [GRCh38 human reference genome](https://www.gencodegenes.org/human/release_21.html) with Minimap2 using the following parameters:
 
 ``` shell
-bamtools convert -format fastq -in test.fl_flipped.bam -out test.fl_flipped.fastq
-minimap2  -ax splice -uf -C5 $reference/GRCh38.primary_assembly.genome.fa test.fl_flipped.fastq > test.fl_flipped.mapping.sam
-samtools view -bS test.fl_flipped.mapping.sam |samtools sort > test.fl_flipped.sort.bam
-samtools index test.fl_flipped.sort.bam
-samtools view -h test.fl_flipped.sort.bam | awk '$10 != "*"' |samtools view -bS - > test.fl_flipped.filter.bam
-samtools view -O BAM -F 2052 -h test.fl_flipped.filter.bam |  samtools sort -O BAM -@ 7 -o test.fl_flipped.unique.bam -
+bamtools convert -format fastq -in test.flnc.bam -out test.flnc.fastq
+minimap2  -ax splice -uf -C5 $reference/GRCh38.primary_assembly.genome.fa test.flnc.fastq > test.flnc.mapping.sam
+samtools view -O BAM -F 2052 -h test.flnc.mapping.sam |  samtools sort -O BAM -@ 7 -o test.flnc.unique.bam -
+samtools view -h test.flnc.unique.bam | awk '$10 != "*"' |samtools view -bS - > test.flnc.filter.bam
 ```
 
-## **Step 1: Get long-read reads with polyA signals**
+## 1. **Filter long-read reads with polyA signals**
 
 > To identify Iso-Seq reads that capture cleavage and polyadenylation events, we searched for reads that contained stretches of adenosines (i.e., polyA tails).
 >
@@ -90,7 +84,7 @@ samtools view -O BAM -F 2052 -h test.fl_flipped.filter.bam |  samtools sort -O B
 The 12 PAS hexamers used here are "AATAAA", "TTTAAA", "AAGAAA", "AACAAA", "TATAAA", "AATGAA", "ATTAAA", "AGTAAA", "AATATA", "CATAAA", "ACTAAA", "GATAAA", which is adopted from [our previous study.](https://genome.cshlp.org/content/33/10/1774.full)
 
 ``` shell
-lrapa filter -i test.fl_flipped.unique.bam -r $reference/GRCh38.primary_assembly.genome.fa -o test.HQ.qname.txt
+lrapa filter -i test.flnc.filter.bam -r $reference/GRCh38.primary_assembly.genome.fa -o test.HQ.qname.txt
 ```
 
 **Parameters**
@@ -114,7 +108,7 @@ samtools view -bS test.HQ.header.sam > test.HQ.bam
 
 **Note:** Make sure the version of samtools is 1.12 or greater, which accepts option `-N` . If you find that this script needs a lot of memory or very slow you may want to split the input bam file by chromosome (samtools view) and run these separately. We do intend to improve this.
 
-## **Step 2: PAS identification and annotation**
+## **2. PAS identification and annotation**
 
 > After obtaining long reads containing poly(A) signals, we identify the poly(A) cleavage site for each read, defined as the last mapped base of the read. Since the cleavage can be imprecise, resulting in mRNAs with variable ends, we refer to the cleavage site as a location where mRNA cleavage takes place, and poly(A) site as a region containing cleavage site(s). Here, due to the inherent heterogeneity of polyadenylation cleavage, we iteratively clustered poly(A) cleavage sites that are within 24 nucleotides of each other.
 >
@@ -137,7 +131,9 @@ lrapa anno -i test.HQ.bam -r $reference/GRCh38.primary_assembly.genome.fa -g $re
 -   `-u, --utr`: Reference annotation 3'-UTR file (required).
 -   `-o, -–output`: Output PAS bed file with header (required).
 
-## **Step 3: PAS count across samples**
+## **3. PAS count**
+
+### 3.1 Bulk long-read RNA-seq
 
 ``` shell
 lrapa count -b N1.bam,N2.bam,C1.bam,C2.bam -p test.PAS.bed -o test.PAS.count.txt
@@ -157,10 +153,10 @@ The output count format:
 | chr11_35230014_35230028\_+\_3UTR | 69  | 50  | 54  | 34  | 32  | 22  |  3UTR   |   CDC44   | CD44:chr11:35229288:35232402:u2 | chr11_35230028_3UTR |
 | chr11_35232387_35232403\_+\_3UTR | 140 | 160 | 155 | 310 | 440 | 550 |  3UTR   |   CDC44   | CD44:chr11:35229288:35232402:u2 | chr11_35232403_3UTR |
 
-## **Step 3.1:** Count PAS reads per cell using scRNA-seq data.
+### 3.1 Single-cell long-read RNA-seq
 
 ``` shell
-lrapa scCount -b scLR.bam -p PAS.bed -o RUN3 -w barcode.rev.txt
+lrapa scCount -b scLR.bam -p test.PAS.bed -o RUN3 -w barcode.rev.txt
 ```
 
 **Parameters**
@@ -173,7 +169,7 @@ lrapa scCount -b scLR.bam -p PAS.bed -o RUN3 -w barcode.rev.txt
 
 -   `-w, --barcode`: Hitlist barcodes.
 
-## **Step 4: Differential APA analysis**
+## **4. Differential analysis**
 
 ![](images/PAS.png)
 
@@ -193,29 +189,7 @@ When n = 2, gDPAU = DPAU.
 
 [Wang J, Chen W, Yue W, et al. Comprehensive mapping of alternative polyadenylation site usage and its dynamics at single-cell resolution[J]. Proceedings of the National Academy of Sciences, 2022, 119(49): e2113504119.](https://www.pnas.org/doi/abs/10.1073/pnas.2113504119)
 
-### No replicates
-
-This module performs differential APA usage analyses between exactly two conditions with no replicate based chisq test. For each test, a n × 2 matrix per PAS site was generated, with the n polyA forming rows and read count in the two conditions forming columns.
-
-We used a Benjamini--Hochberge correction for multiple testing.
-
-If a gene's absolute mean difference of DPAU/gDPAU is \>0.3 and adjusted *P* value is \< 0.01 between two groups, the gene's APA change between two groups will be deemed as significant.
-
-``` shell
-lrapa norepdiff -c test.PAS.count.txt -n N1 -g C1
-```
-
-**Parameters**
-
--   `-i, --input`: count file of PAS sites (required).
-
--   `-c, --group1`: sample 1 for differential analysis (required).
-
--   `-n, --group2`: sample 2 for differential analysis (required).
-
-    **Note:** The name of sample must same as in the count file.
-
-### With replicates
+### 4.1. With replicates
 
 ``` shell
 lrapa diff -i test.PAS.count.txt -s sample.txt -c case -n control
@@ -243,15 +217,31 @@ Example file of sample information
 |   C2,control    |
 |   C3,control    |
 
-## **Additional programs**
+### 4.2. No replicates
 
-**References:**
+This module performs differential APA usage analyses between exactly two conditions with no replicate based chisq test. For each test, a n × 2 matrix per PAS site was generated, with the n polyA forming rows and read count in the two conditions forming columns.
 
-[Alfonso-Gonzalez C, Legnini I, Holec S, et al. Sites of transcription initiation drive mRNA isoform selection[J]. Cell, 2023, 186(11): 2438-2455. e22.](https://www.cell.com/cell/fulltext/S0092-8674(23)00408-7)
+We used a Benjamini--Hochberge correction for multiple testing.
 
-[Hardwick S A, Hu W, Joglekar A, et al. Single-nuclei isoform RNA sequencing unlocks barcoded exon connectivity in frozen brain tissue[J]. Nature biotechnology, 2022, 40(7): 1082-1092.](https://www.nature.com/articles/s41587-022-01231-3)
+If a gene's absolute mean difference of DPAU/gDPAU is \>0.3 and adjusted *P* value is \< 0.01 between two groups, the gene's APA change between two groups will be deemed as significant.
 
-### 1. TSS-polyA site coordin**ati**on
+``` shell
+lrapa norepdiff -c test.PAS.count.txt -n N1 -g C1
+```
+
+**Parameters**
+
+-   `-i, --input`: count file of PAS sites (required).
+
+-   `-c, --group1`: sample 1 for differential analysis (required).
+
+-   `-n, --group2`: sample 2 for differential analysis (required).
+
+    **Note:** The name of sample must same as in the count file.
+
+## 5. Couplings
+
+### 5.1. TSS-PAS coupling
 
 ![](images/TSS-polyA.png)
 
@@ -279,7 +269,7 @@ cat test.header test.full_length.sam  > test.full_length.header.sam
 samtools view -bS test.full_length.header.sam > test.full_length.bam
 ```
 
-### 2. Exon-polyA site coordination
+### 2. Exon-PAS coupling
 
 ![](images/Exon-polyA.png)
 
@@ -296,10 +286,21 @@ lrapa couplingExon -i test.full_length.bam -g hg38.refGene.gtf -p test.PAS.bed -
 **Options**
 
 -   `-i, --input`: Input full-length BAM file, generated by .
+
 -   `-g, --gtf`: Reference annotation gtf file (required).
+
 -   `-p, --pas`: Reference pas bed.
+
 -   `-o, --output`: Output TSS-exon_coordination file.
 
 ## File conversion scripts
 
 get3UTR_0.1.R : get the 3'UTR reference for PAS analysis
+
+## **Additional programs**
+
+**References:**
+
+[Alfonso-Gonzalez C, Legnini I, Holec S, et al. Sites of transcription initiation drive mRNA isoform selection[J]. Cell, 2023, 186(11): 2438-2455. e22.](https://www.cell.com/cell/fulltext/S0092-8674(23)00408-7)
+
+[Hardwick S A, Hu W, Joglekar A, et al. Single-nuclei isoform RNA sequencing unlocks barcoded exon connectivity in frozen brain tissue[J]. Nature biotechnology, 2022, 40(7): 1082-1092.](https://www.nature.com/articles/s41587-022-01231-3)
