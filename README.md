@@ -86,18 +86,6 @@ samtools view -h test.unique.bam | awk '$10 != "*"' |samtools view -bS - > test.
 
 ## 1. **Filter long-read reads with polyA signals**
 
-> To identify Iso-Seq reads that capture cleavage and polyadenylation events, we searched for reads that contained stretches of adenosines (i.e., polyA tails).
->
-> The poly(A) cleavage site on the genome is considered to be right after the 3′-most position of the alignment of long reads with the genome.
->
-> It contains a soft-clipped sequence mostly composed of adenines (or thymines for reverse strand). PolyA stretches needed to be located immediately after the cleavage site (i.e., starts at the base within the read that does not map to the hg38 reference genome, which is otherwise known as the portion of the read that is "softclipped"). We assessed if the softclipped portion of every read contained a stretch of adenosines. We retained the reads if their softclipped segments were \< 20 nucleotides in length and were composed of 95% adenosines. Moreover, if the length of the softclipped segment of a read was ≥ 20 nucleotides, we assessed if the first 20 nucleotides of the softclipped segment was composed of 80% adenosines and if the following 20 nucleotides of the softclipped segment was composed of 95% adenosines and retained these reads as containing a stretch of adenosines.
->
-> The flanking region does not contain a stretch of six adenines. Reads with stretches of adenosines were filtered for internal priming or mispriming using an approach similar to what has been described previously. In brief, the genomic sequence −10 to +10 nt surrounding the cleavage site was examined(`-f, --flank_size)`. If the sequence has six continuous As, it is considered as internal priming.
->
-> The adjacent region contains a known PAS hexamer. We require the long- read has one of the 12 PAS hexamers (AAUAAA or 11 variants) in −40 to −1 nt region of the cleavage site (`-a, --adjacent_size`).
-
-The 12 PAS hexamers used here are "AATAAA", "TTTAAA", "AAGAAA", "AACAAA", "TATAAA", "AATGAA", "ATTAAA", "AGTAAA", "AATATA", "CATAAA", "ACTAAA", "GATAAA", which is adopted from [our previous study.](https://genome.cshlp.org/content/33/10/1774.full)
-
 ``` shell
 lrapa filter -i test.flnc.filter.bam -r $reference/GRCh38.primary_assembly.genome.fa -o test.HQ.qname.txt
 ```
@@ -124,12 +112,6 @@ samtools view -bS test.HQ.header.sam > test.HQ.bam
 **Note:** Make sure the version of samtools is 1.12 or greater, which accepts option `-N` . If you find that this script needs a lot of memory or very slow you may want to split the input bam file by chromosome (samtools view) and run these separately. We do intend to improve this.
 
 ## **2. PAS identification and annotation**
-
-> After obtaining long reads containing poly(A) signals, we identify the poly(A) cleavage site for each read, defined as the last mapped base of the read. Since the cleavage can be imprecise, resulting in mRNAs with variable ends, we refer to the cleavage site as a location where mRNA cleavage takes place, and poly(A) site as a region containing cleavage site(s). Here, due to the inherent heterogeneity of polyadenylation cleavage, we iteratively clustered poly(A) cleavage sites that are within 24 nucleotides of each other.
->
-> If a poly(A) site contained a cleavage site annotated in the reference GTF file, the annotated cleavage site is used as the representative poly(A) site. If no annotated site within the poly(A) site, we select the cleavage site with an adenine ("A") base and the highest read count as the representative poly(A) site. If none of the poly(A) cleavage sites are an "A" base, we choose the cleavage site with the highest read coverage as the representative poly(A) site.
->
-> **reference**: Bin Tian, Jun Hu, Haibo Zhang, Carol S. Lutz, A large-scale analysis of mRNA polyadenylation of human and mouse genes, *Nucleic Acids Research*, Volume 33, Issue 1, 1 January 2005, Pages 201--212. <https://doi.org/10.1093/nar/gki158>
 
 ``` r
 lrapa anno -i test.HQ.bam -r $reference/GRCh38.primary_assembly.genome.fa -g $reference/hg38.refGene.gtf -u $reference/hg38.refGene.3utr_merge.bed -o test.PAS.bed
@@ -185,24 +167,6 @@ lrapa scCount -b scLR.bam -p test.PAS.bed -o RUN3 -w barcode.rev.txt
 -   `-w, --barcode`: Hitlist barcodes.
 
 ## **4. Differential analysis**
-
-![](images/PAS.png)
-
-### PAS usage index
-
-For genes with two polyA sites, we used DPAU to quantify the percentage of DPAU for each gene. DPAU ranges from 0 to 1.
-
-![](images/DPAU.png)
-
-For genes with more than two polyA sites, [gDPAU](https://www.pnas.org/doi/10.1073/pnas.2113504119) is used to quantify the trend of distal polyA site usage for each gene. It is a location index weighted sum of read count percentage of gene's each polyA site. E.g., for a gene with n (n≥2) polyA sites, p1, p2, ..., pn represent the percentages of its polyA site usage at each site from 5′-end to 3′-end.
-
-![](images/gDUAP.png){width="479"}
-
-When n = 2, gDPAU = DPAU.
-
-**Reference:**
-
-[Wang J, Chen W, Yue W, et al. Comprehensive mapping of alternative polyadenylation site usage and its dynamics at single-cell resolution[J]. Proceedings of the National Academy of Sciences, 2022, 119(49): e2113504119.](https://www.pnas.org/doi/abs/10.1073/pnas.2113504119)
 
 ### 4.1. With replicates
 
@@ -312,10 +276,3 @@ lrapa couplingExon -i test.full_length.bam -g hg38.refGene.gtf -p test.PAS.bed -
 
 get3UTR_0.1.R : get the 3'UTR reference for PAS analysis
 
-## **Additional programs**
-
-**References:**
-
-[Alfonso-Gonzalez C, Legnini I, Holec S, et al. Sites of transcription initiation drive mRNA isoform selection[J]. Cell, 2023, 186(11): 2438-2455. e22.](https://www.cell.com/cell/fulltext/S0092-8674(23)00408-7)
-
-[Hardwick S A, Hu W, Joglekar A, et al. Single-nuclei isoform RNA sequencing unlocks barcoded exon connectivity in frozen brain tissue[J]. Nature biotechnology, 2022, 40(7): 1082-1092.](https://www.nature.com/articles/s41587-022-01231-3)
