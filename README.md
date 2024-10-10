@@ -86,18 +86,6 @@ samtools view -h test.unique.bam | awk '$10 != "*"' |samtools view -bS - > test.
 
 ## 1. **Filter long-read reads with polyA signals**
 
-> To identify Iso-Seq reads that capture cleavage and polyadenylation events, we searched for reads that contained stretches of adenosines (i.e., polyA tails).
->
-> The poly(A) cleavage site on the genome is considered to be right after the 3′-most position of the alignment of long reads with the genome.
->
-> It contains a soft-clipped sequence mostly composed of adenines (or thymines for reverse strand). PolyA stretches needed to be located immediately after the cleavage site (i.e., starts at the base within the read that does not map to the hg38 reference genome, which is otherwise known as the portion of the read that is "softclipped"). We assessed if the softclipped portion of every read contained a stretch of adenosines. We retained the reads if their softclipped segments were \< 20 nucleotides in length and were composed of 95% adenosines. Moreover, if the length of the softclipped segment of a read was ≥ 20 nucleotides, we assessed if the first 20 nucleotides of the softclipped segment was composed of 80% adenosines and if the following 20 nucleotides of the softclipped segment was composed of 95% adenosines and retained these reads as containing a stretch of adenosines.
->
-> The flanking region does not contain a stretch of six adenines. Reads with stretches of adenosines were filtered for internal priming or mispriming using an approach similar to what has been described previously. In brief, the genomic sequence −10 to +10 nt surrounding the cleavage site was examined(`-f, --flank_size)`. If the sequence has six continuous As, it is considered as internal priming.
->
-> The adjacent region contains a known PAS hexamer. We require the long- read has one of the 12 PAS hexamers (AAUAAA or 11 variants) in −40 to −1 nt region of the cleavage site (`-a, --adjacent_size`).
-
-The 12 PAS hexamers used here are "AATAAA", "TTTAAA", "AAGAAA", "AACAAA", "TATAAA", "AATGAA", "ATTAAA", "AGTAAA", "AATATA", "CATAAA", "ACTAAA", "GATAAA", which is adopted from [our previous study.](https://genome.cshlp.org/content/33/10/1774.full)
-
 ``` shell
 lrapa filter -i test.flnc.filter.bam -r $reference/GRCh38.primary_assembly.genome.fa -o test.HQ.qname.txt
 ```
@@ -124,12 +112,6 @@ samtools view -bS test.HQ.header.sam > test.HQ.bam
 **Note:** Make sure the version of samtools is 1.12 or greater, which accepts option `-N` . If you find that this script needs a lot of memory or very slow you may want to split the input bam file by chromosome (samtools view) and run these separately. We do intend to improve this.
 
 ## **2. PAS identification and annotation**
-
-> After obtaining long reads containing poly(A) signals, we identify the poly(A) cleavage site for each read, defined as the last mapped base of the read. Since the cleavage can be imprecise, resulting in mRNAs with variable ends, we refer to the cleavage site as a location where mRNA cleavage takes place, and poly(A) site as a region containing cleavage site(s). Here, due to the inherent heterogeneity of polyadenylation cleavage, we iteratively clustered poly(A) cleavage sites that are within 24 nucleotides of each other.
->
-> If a poly(A) site contained a cleavage site annotated in the reference GTF file, the annotated cleavage site is used as the representative poly(A) site. If no annotated site within the poly(A) site, we select the cleavage site with an adenine ("A") base and the highest read count as the representative poly(A) site. If none of the poly(A) cleavage sites are an "A" base, we choose the cleavage site with the highest read coverage as the representative poly(A) site.
->
-> **reference**: Bin Tian, Jun Hu, Haibo Zhang, Carol S. Lutz, A large-scale analysis of mRNA polyadenylation of human and mouse genes, *Nucleic Acids Research*, Volume 33, Issue 1, 1 January 2005, Pages 201--212. <https://doi.org/10.1093/nar/gki158>
 
 ``` r
 lrapa anno -i test.HQ.bam -r $reference/GRCh38.primary_assembly.genome.fa -g $reference/hg38.refGene.gtf -u $reference/hg38.refGene.3utr_merge.bed -o test.PAS.bed
