@@ -12,7 +12,7 @@ Edited in 10/10/2024
 
 ## Installation
 
-You can install the package using the following command:
+You can install LRAPA using command line (linux) by cloning git repository on github:
 
 ```         
 # Clone the repository 
