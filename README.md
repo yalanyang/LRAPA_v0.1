@@ -168,24 +168,6 @@ lrapa scCount -b scLR.bam -p test.PAS.bed -o RUN3 -w barcode.rev.txt
 
 ## **4. Differential analysis**
 
-![](images/PAS.png)
-
-### PAS usage index
-
-For genes with two polyA sites, we used DPAU to quantify the percentage of DPAU for each gene. DPAU ranges from 0 to 1.
-
-![](images/DPAU.png)
-
-For genes with more than two polyA sites, [gDPAU](https://www.pnas.org/doi/10.1073/pnas.2113504119) is used to quantify the trend of distal polyA site usage for each gene. It is a location index weighted sum of read count percentage of gene's each polyA site. E.g., for a gene with n (n≥2) polyA sites, p1, p2, ..., pn represent the percentages of its polyA site usage at each site from 5′-end to 3′-end.
-
-![](images/gDUAP.png){width="479"}
-
-When n = 2, gDPAU = DPAU.
-
-**Reference:**
-
-[Wang J, Chen W, Yue W, et al. Comprehensive mapping of alternative polyadenylation site usage and its dynamics at single-cell resolution[J]. Proceedings of the National Academy of Sciences, 2022, 119(49): e2113504119.](https://www.pnas.org/doi/abs/10.1073/pnas.2113504119)
-
 ### 4.1. With replicates
 
 ``` shell
