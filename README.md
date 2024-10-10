@@ -4,13 +4,13 @@ The pipeline for APA analysis using bulk and single-cell long-read RNA sequencin
 
 We would like to construct a data set representing the most comprehensive PAS collection for human brain to date.
 
-Edited in 08/16/2024
+Edited in 10/10/2024
 
 **Workflow of LRAPA:**
 
 ![](images/APA_workflow.png)
 
-## Installation 
+## Installation
 
 You can install the package using the following command:
 
@@ -38,12 +38,14 @@ chmod +x lrapa # Make the script executable
 
 ## **0. Pre-processing of the long-read CCS reads.**
 
+### **0.1. bulk long-read RNA-seq**
+
 Here, we used one of the three cerebellum samples downloaded from [Pacbio](https://downloads.pacbcloud.com/public/dataset/Kinnex-full-length-RNA/) as test data.
 
 Removal of primers is performed using [lima](https://isoseq.how).
 
 ``` shell
-lima test.segmented.bam IsoSeq_v2_primers_12.fasta test.fl.bam --isoseq --peek-guess
+lima test.ccs.bam IsoSeq_v2_primers_12.fasta test.fl.bam --isoseq --peek-guess
 isoseq3 refine test.fl.IsoSeqX_bc04_5p--IsoSeqX_3p.bam IsoSeq_v2_primers_12.fasta test.refine.bam
 ```
 
@@ -67,6 +69,19 @@ bamtools convert -format fastq -in test.flnc.bam -out test.flnc.fastq
 minimap2  -ax splice -uf -C5 $reference/GRCh38.primary_assembly.genome.fa test.flnc.fastq > test.flnc.mapping.sam
 samtools view -O BAM -F 2052 -h test.flnc.mapping.sam |  samtools sort -O BAM -@ 7 -o test.flnc.unique.bam -
 samtools view -h test.flnc.unique.bam | awk '$10 != "*"' |samtools view -bS - > test.flnc.filter.bam
+```
+
+### 0.2. Single-cell long-read RNA-seq
+
+``` shell
+lima --isoseq --dump-clips --peek-guess -j 24 test.hifi_reads.bam 10x_Chromium_3p_primers.fasta test.fl.bam
+isoseq3 test.fl.5p--3p.bam test.5p--3p.tagged.bam --design T-12U-16B
+isoseq3 refine test.5p--3p.tagged.bam 10x_Chromium_3p_primers.fasta test.tagged.refine.bam
+isoseq3 correct test.tagged.refine.bam --barcodes 3M-february-2018-REVERSE-COMPLEMENTED.txt test.tagged.refine.corrected.bam
+isoseq3 dedup test.tagged.refine.corrected.bam test.tagged.refine.corrected.dedup.bam (optional)
+pbmm2 align --preset ISOSEQ --sort test.tagged.refine.corrected.bam ref.genome.fa test.mapped.bam
+samtools view -O BAM -F 2052 -h test.mapped.sam |  samtools sort -O BAM -@ 7 -o test.unique.bam -
+samtools view -h test.unique.bam | awk '$10 != "*"' |samtools view -bS - > test.flnc.filter.bam
 ```
 
 ## 1. **Filter long-read reads with polyA signals**
