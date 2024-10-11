@@ -4,7 +4,7 @@ title: Step_0_Pre-processing
 nav_order: 3
 ---
 
-# Step 0. Pre-processing of the long-read CCS reads.
+# **Step 0. Pre-processing of the long-read CCS reads**
 
 ## 0.1. bulk long-read RNA-seq
 
