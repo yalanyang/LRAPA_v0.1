@@ -189,7 +189,7 @@ while (TRUE) {
 #export(HQ_bam, BamFile(opt$hq, "wb"))
 writeLines(unlist(HQ_reads), opt$hq)
 # Print the number of reads without splicing junctions and hexamers
-cat("Number of high quality reads :", length(HQ_reads), "\n")
+cat("Number of high quality reads :", nrow(unlist(HQ_reads)), "\n")
 
 
 # Close parallel backend
