@@ -4,7 +4,7 @@ title: Coupling
 nav_order: 8
 ---
 
-# Couplings
+# **Couplings**
 
 ## 1 TSS-PAS coupling
 

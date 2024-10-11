@@ -4,7 +4,7 @@ title: Step_3_Count
 nav_order: 6
 ---
 
-# Step 3. PAS count
+# **Step 3. PAS count**
 
 ## 3.1 Bulk long-read RNA-seq
 

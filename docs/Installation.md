@@ -4,7 +4,7 @@ title: Installation
 nav_order: 2
 ---
 
-# Installation
+# **Installation**
 
 You can install LRAPA using command line (Linux or macOS) by cloning the repository on github:
 

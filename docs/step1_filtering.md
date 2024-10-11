@@ -5,7 +5,7 @@ nav_order: 4
 ---
 
 
-# Step 1. Filter long-read reads with polyA signals
+# **Step 1. Filter long-read reads with polyA signals**
 
 > To identify Iso-Seq reads that capture cleavage and polyadenylation events, we searched for reads that contained stretches of adenosines (i.e., polyA tails).
 >

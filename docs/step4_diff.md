@@ -4,7 +4,7 @@ title: Step_4_Diff
 nav_order: 7
 ---
 
-# Step 4. Differential analysis
+# **Step 4. Differential analysis**
 
 ![](images/PAS.png)
 

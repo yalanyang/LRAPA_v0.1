@@ -4,7 +4,7 @@ title: Step_2_Annotation
 nav_order: 5
 ---
 
-# Step 2. PAS identification and annotation
+# **Step 2. PAS identification and annotation**
 
 > After obtaining long reads containing poly(A) signals, we identify the poly(A) cleavage site for each read, defined as the last mapped base of the read. Since the cleavage can be imprecise, resulting in mRNAs with variable ends, we refer to the cleavage site as a location where mRNA cleavage takes place, and poly(A) site as a region containing cleavage site(s). Here, due to the inherent heterogeneity of polyadenylation cleavage, we iteratively clustered poly(A) cleavage sites that are within 24 nucleotides of each other.
 >
