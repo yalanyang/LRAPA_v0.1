@@ -1,7 +1,6 @@
 # LRAPA
 
-Long-read alternative polyadenylation (LRAPA) is a package written by R for APA analysis using bulk and single-cell long-read RNA sequencing data. 
-
+Long-read Alternative Polyadenylation (LRAPA) is an R package designed for comprehensive analysis of alternative polyadenylation (APA) using both bulk and single-cell long-read RNA sequencing data. The package facilitates the identification and quantification of polyadenylation sites, differentail APA analysis between conditions and cell types, and PAS-exon/TSS couplings analysis.
 
 **Workflow of LRAPA:**
 
