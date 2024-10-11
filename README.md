@@ -13,4 +13,4 @@ The complete LRAP manual is available via [github page](https://yalanyang.github
 
 **Contributions**
 
-This package is developed and maintained by [Yalan Yang](yangyalan@uchicago.edu) at the Department of Human Genetics, The University of Chicago. If you want to contribute the package, please leave an issue. Thank you.
+This package is developed and maintained by Yalan Yang (yangyalan@uchicago.edu) at the Department of Human Genetics, The University of Chicago. If you want to contribute the package, please leave an issue. Thank you.
