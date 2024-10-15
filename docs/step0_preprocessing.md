@@ -41,9 +41,11 @@ samtools view -h test.flnc.unique.bam | awk '$10 != "*"' |samtools view -bS - > 
 
 ## 0.2. Single-cell long-read RNA-seq
 
+For single-cell long-read data, we used the [isoseq pipeline](https://isoseq.how/umi/cli-workflow.html) to process the CCS reads. The tag function is used to clip UMIs and cell barcodes from the reads and assoiciated with the reads for late deduplication.
+
 ``` shell
 lima --isoseq --dump-clips --peek-guess -j 24 test.hifi_reads.bam 10x_Chromium_3p_primers.fasta test.fl.bam
-isoseq3 test.fl.5p--3p.bam test.5p--3p.tagged.bam --design T-12U-16B
+isoseq3 tag test.fl.5p--3p.bam test.5p--3p.tagged.bam --design T-12U-16B
 isoseq3 refine test.5p--3p.tagged.bam 10x_Chromium_3p_primers.fasta test.tagged.refine.bam
 isoseq3 correct test.tagged.refine.bam --barcodes 3M-february-2018-REVERSE-COMPLEMENTED.txt test.tagged.refine.corrected.bam
 isoseq3 dedup test.tagged.refine.corrected.bam test.tagged.refine.corrected.dedup.bam (optional)
