@@ -3,15 +3,15 @@
 library(optparse)
 
 option_list <- list(
-  make_option(c("-c", "--count_files"), type = "character", default = NULL, 
+  make_option(c("-i", "--count_files"), type = "character", default = NULL, 
               help = "Comma-separated list of input count files", metavar = "character"),
-  make_option(c("-n", "--group1"), type = "character", default = NULL, 
+  make_option(c("-c", "--group1"), type = "character", default = NULL, 
               help = "Comma-separated list of input count files", metavar = "character"),
-  make_option(c("-g", "--group2"), type = "character", default = NULL, 
+  make_option(c("-n", "--group2"), type = "character", default = NULL, 
               help = "Comma-separated list of input count files", metavar = "character")
 )
 
-##Usage:  Rscript 4.0_DE_test.norep_0.2.R -c Encode.brain.bulk.count.txt -n AD -g Health
+##Usage:  Rscript 4.0_DE_test.norep_0.2.R -i Encode.brain.bulk.count.txt -c AD -n Health
 
 opt_parser <- OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
@@ -36,7 +36,7 @@ PAS$PAU1 <- round(PAS[,group1]/PAS$gene_count1,3)
 PAS$PAU2 <- round(PAS[,group2]/PAS$gene_count2,3)
 PAS$dPAU <- PAS$PAU1-PAS$PAU2
 
-PAS <- PAS %>% dplyr::filter((PAU1>=0.05 | PAU2>=0.05) & (PAS[,group1]+PAS[,group2]>=10))
+PAS <- PAS %>% dplyr::filter(((PAU1>=0.05 | PAU2>=0.05) & (PAU1 <=0.95 | PAU2 <= 0.95)) & (PAS[,group1] >=10 | PAS[,group2]>=10))
 
 
 # Calculate gDPAU for each gene and strand
@@ -82,9 +82,9 @@ betweenPAS <- function(data) {
           group2_count <- paste0(gene_data[,group2][i], ",", gene_data[,group2][j])
           group1_PAU <- paste0(gene_data$PAU1[i],",",gene_data$PAU1[j])
           group2_PAU <- paste0(gene_data$PAU2[i],",",gene_data$PAU2[j])
-          strand <- strsplit(gene_data$PAS_ID[i],"[_]")[[1]][4]
-          start_group1 <- as.numeric(strsplit(gene_data$PAS_ID[i],"[_]")[[1]][2])
-          start_group2  <- as.numeric(strsplit(gene_data$PAS_ID[j],"[_]")[[1]][2])
+          strand <- strsplit(gene_data$PAS_ID[i],"[:]")[[1]][3]
+          start_group1 <- as.numeric(strsplit(gene_data$PAS_ID[i],"[:]")[[1]][2])
+          start_group2  <- as.numeric(strsplit(gene_data$PAS_ID[j],"[:]")[[1]][2])
           
           DPAU <- ifelse ((strand == "+" & start_group1 > start_group2) | (strand == "-" & start_group1 < start_group2),  gene_data$PAU1[i] - gene_data$PAU2[i],
                           gene_data$PAU1[j] - gene_data$PAU2[j])
@@ -135,13 +135,13 @@ betweenPAS_gene <- function(data) {
 # Perform chi-squared tests for each gene
 genes <- unique(data$gene_name)
 results <- list()
-data$start <- sapply(strsplit(as.character(data$PAS_ID), "_"), function(x) x[3])
-data$strand <- sapply(strsplit(as.character(data$PAS_ID), "_"), function(x) x[4])
+data$start <- sapply(strsplit(as.character(data$PAS_ID), ":"), function(x) x[2])
+data$strand <- sapply(strsplit(as.character(data$PAS_ID), ":"), function(x) x[3])
 for (i in seq_along(genes)) {
   count <- subset(data, gene_name == genes[i])
   # Get all pairs of rows for the gene
   num_sites <- nrow(count)
-  if (num_sites > 2) {
+  if (num_sites >= 2) {
     
     contingency_table <- as.matrix(count[, c(group1, group2)])
     chisq_test <- chisq.test(contingency_table)
@@ -192,8 +192,8 @@ return(results_df)
 
 within_3UTR <- function(data) {
   results <- list()
-  data$start <- sapply(strsplit(as.character(data$PAS_ID), "_"), function(x) x[3])
-  data$strand <- sapply(strsplit(as.character(data$PAS_ID), "_"), function(x) x[4])
+  data$start <- sapply(strsplit(as.character(data$PAS_ID), ":"), function(x) x[2])
+  data$strand <- sapply(strsplit(as.character(data$PAS_ID), ":"), function(x) x[3])
   utrs <- unique(data$UTR_id)
   for ( i in seq_along(utrs)){
     count <- data[data$UTR_id==utrs[i],]
@@ -253,7 +253,7 @@ within_3UTR <- function(data) {
 
 between_3UTR <- function(data) {
   results <- list()
-  data$strand <- sapply(strsplit(as.character(data$PAS_ID), "_"), function(x) x[4])
+  data$strand <- sapply(strsplit(as.character(data$PAS_ID), ":"), function(x) x[3])
   Count1_total <- aggregate(data[,group1],by=list(type=data$UTR_id),sum)
   PAU1_total <-  aggregate(data$PAU1,by=list(type=data$UTR_id),sum)
   colnames(Count1_total) <- c("UTR_id","utr_count1")

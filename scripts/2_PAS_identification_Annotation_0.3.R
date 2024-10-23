@@ -254,10 +254,8 @@ annotate_bed <- function(bed_file) {
   unique_annotated_bed$anno <- ifelse(unique_annotated_bed$V16 == ".", "not_RefGene", "yes_RefGene")
   unique_annotated_bed$PAS_ID_new <- ifelse(unique_annotated_bed$V16 == ".", unique_annotated_bed$V5, unique_annotated_bed$V16)
   unique_annotated_bed <- unique_annotated_bed %>% group_by(V1, V2, V3) %>%  slice(1) %>% ungroup()
-  colnames(unique_annotated_bed) = c("Chr",	"Start",	"End",	"Hexamer",	"PAS_ID_old",	"Strand",	"Count","UTR_id",	"Feature",
-                            "gene_name",	"gene_count",	"PAU", "annotated_PAS", "anno","PAS_ID_new")
-  #unique_annotated_bed$PAS_ID <- paste(unique_annotated_bed$Chr, unique_annotated_bed$Start, unique_annotated_bed$End, unique_annotated_bed$Strand, unique_annotated_bed$Feature, sep = "_")
-  #unique_annotated_bed <- unique_annotated_bed %>% dplyr::filter(PAU>=0.05)
+  colnames(unique_annotated_bed) = c("Chr",	"Start",	"End",	"Hexamer",	"PAS_ID",	"Strand",	"Count","UTR_id",	"Feature",
+                            "gene_name",	"gene_count",	"PAU", "annotated_PAS", "anno","annotated_PAS")
   
   return(unique_annotated_bed)
 }

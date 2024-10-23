@@ -42,7 +42,7 @@ read_pas_reference <- function(reference_file) {
                     ranges = IRanges(start = pas_df$Start, end = pas_df$End),
                     strand = pas_df$Strand)
   # Store additional annotation columns in metadata of GRanges object
-  pas_gr$annotations <- pas_df[, c(10,11,9,14)]
+  pas_gr$annotations <- pas_df[, c(8,9,10,15)]
   return(pas_gr)
 }
 
@@ -106,7 +106,7 @@ colnames(count_matrix) <- c(bam_files, colnames(pas_reference$annotations))
 sum_counts <- rowSums(count_matrix[, 1:n_samples])
 count_matrix <- count_matrix[sum_counts > 0, ]
 
-rownames(count_matrix) <- count_matrix$PAS_ID
+rownames(count_matrix) <- count_matrix$PAS_ID_new
 
 # Write the count matrix to a text file
 write.table(count_matrix, file = opt$output, sep = "\t", quote = FALSE, col.names = TRUE)

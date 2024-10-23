@@ -29,7 +29,6 @@ samples <- sample %>% dplyr::filter(sample$Group==group1_sample | sample$Group==
 sample_id <- samples$sample_id
 
 methods <- c("all","between","within")
-#methods <- c("between")
 for (method in methods){
 if (method=="all") {
   counts=count[,c("gene_name", "PAS_ID", sample_id)]
@@ -174,10 +173,3 @@ res <- res %>% left_join(merged_data, by ="gene_id")
 res$sig <- ifelse(abs(res$dgDPAU) >= 0.1 & res$adj_pvalue <= 0.05 , "Yes", "No")
 write.table(res, paste0(group1_sample, '_', group2_sample, '.', method, ".diff.DRIMSeq.txt"), sep = "\t", row.names = FALSE, quote = FALSE)
 }
-
-#gene <- "FGF14"
-#plotProportions(d, gene_id = gene, group_variable = "Group")
-#plotProportions(d, gene_id = gene, group_variable = "Group",
-   #             plot_type = "lineplot")
-#plotProportions(d, gene_id = gene, group_variable = "Group",
- #               plot_type = "ribbonplot")
