@@ -146,7 +146,7 @@ case "$function" in
             echo "                  -n, --group2: Sample 2 for differential analysis (required)."   
             exit 1
         fi
-        Rscript scripts/4.0_DE_test.norep_0.2.R "$@"
+        Rscript scripts/4.0_DE_test.norep_0.3.R "$@"
         ;;
     "scCount")
         if [ "$#" -lt 4 ]; then

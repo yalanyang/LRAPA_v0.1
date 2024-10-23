@@ -42,7 +42,7 @@ read_pas_reference <- function(reference_file) {
                     ranges = IRanges(start = pas_df$Start, end = pas_df$End),
                     strand = pas_df$Strand)
   # Store additional annotation columns in metadata of GRanges object
-  pas_gr$annotations <- pas_df[, c(8,9,10,15)]
+  pas_gr$annotations <- pas_df[, c("PAS_ID", "UTR_id", "Feature", "gene_name")]
   return(pas_gr)
 }
 
