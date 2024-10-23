@@ -17,7 +17,7 @@ lima test.ccs.bam IsoSeq_v2_primers_12.fasta test.fl.bam --isoseq --peek-guess
 isoseq3 refine test.fl.IsoSeqX_bc04_5p--IsoSeqX_3p.bam IsoSeq_v2_primers_12.fasta test.refine.bam
 ```
 
-**Note**: The IsoSeq_v2_primers_12 was download from [Pacbio](https://downloads.pacbcloud.com/public/dataset/Kinnex-full-length-RNA/REF-primers/)
+**Note**: The IsoSeq_v2_primers_12.fasta file was download from [Pacbio](https://downloads.pacbcloud.com/public/dataset/Kinnex-full-length-RNA/REF-primers/)
 
 Then we convert the full-length bam file into sam format and run the [flip_reads.py](https://github.com/mortazavilab/ENCODE-references/tree/master) script to orient the reads to the correct strand (since lima\--ccs does not do this, recommend by [Encode long-read pipeline](https://www.encodeproject.org/documents/6d583a1d-d692-4511-b13b-c051822d861c/@@download/attachment/ENCODE%20Long%20Read%20RNA-Seq%20Analysis%20Pipeline%20v3.2%20%28Human%29.pdf)).
 
@@ -41,12 +41,18 @@ samtools view -h test.flnc.unique.bam | awk '$10 != "*"' |samtools view -bS - > 
 
 ## 0.2. Single-cell long-read RNA-seq
 
+For single-cell long-read data, we used the [isoseq pipeline](https://isoseq.how/umi/cli-workflow.html) to process the CCS reads. The tag function clips UMIs and cell barcodes from the reads and associates them with the reads for later deduplication. We retained the poly(A) tail in the isoseq refine function for the downstream APA analysis.
+
 ``` shell
 lima --isoseq --dump-clips --peek-guess -j 24 test.hifi_reads.bam 10x_Chromium_3p_primers.fasta test.fl.bam
-isoseq3 test.fl.5p--3p.bam test.5p--3p.tagged.bam --design T-12U-16B
+isoseq3 tag test.fl.5p--3p.bam test.5p--3p.tagged.bam --design T-12U-16B
 isoseq3 refine test.5p--3p.tagged.bam 10x_Chromium_3p_primers.fasta test.tagged.refine.bam
 isoseq3 correct test.tagged.refine.bam --barcodes 3M-february-2018-REVERSE-COMPLEMENTED.txt test.tagged.refine.corrected.bam
 isoseq3 dedup test.tagged.refine.corrected.bam test.tagged.refine.corrected.dedup.bam (optional)
+```
+
+We next align the long-reads to the reference genome with pbmm2, as recommended by the Iso-Seq package.
+``` shell
 pbmm2 align --preset ISOSEQ --sort test.tagged.refine.corrected.bam ref.genome.fa test.mapped.bam
 samtools view -O BAM -F 2052 -h test.mapped.sam |  samtools sort -O BAM -@ 7 -o test.unique.bam -
 samtools view -h test.unique.bam | awk '$10 != "*"' |samtools view -bS - > test.flnc.filter.bam
