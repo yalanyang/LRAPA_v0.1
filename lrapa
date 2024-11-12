@@ -70,7 +70,7 @@ if [[ "$function" == "--help" || "$function" == "-h" ]]; then
         echo "                Arguments:"
         echo "                  -i, --input: Input full-length BAM file (required)."
         echo "                  -g, --gtf: Reference annotation GTF file (required)."
-        echo "                  -p, --pas: Reference PAS bed (required)."
+        echo "                  -p, --pas: Reference PAS file (bed format, required)."
         echo "                  -o, --output: Output PAS-exon couplings file."
         echo
 fi
