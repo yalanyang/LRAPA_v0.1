@@ -251,7 +251,7 @@ within_3UTR <- function(data) {
 }
 
 
-between_3UTR <- function(data) {
+ALE <- function(data) {
   results <- list()
   data$strand <- sapply(strsplit(as.character(data$PAS_ID), ":"), function(x) x[3])
   Count1_total <- aggregate(data[,group1],by=list(type=data$UTR_id),sum)
@@ -335,6 +335,6 @@ write.table(between_PAS, paste0(group1, '_', group2, ".diff.betweenPAS.txt"), se
 PAS <- PAS[PAS$Feature=="3UTR",]
 within_3UTR <- within_3UTR(PAS)
 between_3UTR <- between_3UTR(PAS)
-write.table(within_3UTR, paste0(group1, '_', group2, ".PAS.diff.within3UTR.txt"), sep = "\t", row.names = FALSE, quote = FALSE)
-write.table(between_3UTR, paste0(group1, '_', group2, ".PAS.diff.between3UTR.txt"), sep = "\t", row.names = FALSE, quote = FALSE)   
+write.table(within_3UTR, paste0(group1, '_', group2, ".PAS.diff.TUTR.txt"), sep = "\t", row.names = FALSE, quote = FALSE)
+write.table(between_3UTR, paste0(group1, '_', group2, ".PAS.diff.ALS.txt"), sep = "\t", row.names = FALSE, quote = FALSE)   
 cat("Analysis complete", "\n")

@@ -1,10 +1,17 @@
+## update: 11-13-2024 
+## To remove genes from a GTF file where the distance between two or more of its non-overlapping transcripts exceeds 10 kb
+## and remove genes that have transcripts in different strands, such as Gm2004 in mouse refgene.
+
+## update: 11-19-2024 
+## To remove the first and last exon of each transcript
+
 library(optparse)
 option_list <- list(
   make_option(c("-i", "--input"), type="character", default=NULL,
               help="Input BAM file", metavar="file"),
   make_option(c("-o", "--output"), type="character", default="TSS-exon_coordination.txt",
               help="Output TSS-exon_coordination file", metavar="file"),
-  make_option(c("-g", "--gtf"), type="character", default=NULL,
+  make_option(c("-s", "--se"), type="character", default=NULL,
               help="Reference annotation gtf file", metavar="file"),
   make_option(c("-p", "--pas"), type="character", default=NULL,
               help="Reference polyA.bed", metavar="file")
@@ -13,20 +20,21 @@ opt_parser <- OptionParser(option_list=option_list)
 opt <- parse_args(opt_parser)
 bam <- opt$input
 pas.bed <- opt$pas
-annot_path <-opt$gtf
+se.anno <-opt$se
 output <- opt$output
-#Examples: Rscript 5_PAS_exon_pair_V2.R -i Encode.TSS.TES2.bam -g /Users/yangyalan/results/Long-read-APA-pipeline/reference/hg38.refGene.gtf -p ../Encode.brain.new.PAS.bed -o TSS-exon.coordination.chiqtest.txt
 
 library(GenomicRanges)
 library(dplyr)
 library(data.table)
-
 library(stringr)
 
+
+
 ##prepare PAS sites
+message("Peparing PAS sites")
 pas <- fread(pas.bed, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 pas <- pas[pas$Feature != "intergenic"]
-pas <- pas %>% dplyr::filter(gene_count >= 10 & PAU >=0.05 & PAU <= 0.95) %>%  dplyr::select(Chr,Start,End,PAS_ID_new, gene_name,Strand) %>% arrange(Chr, Start, End)
+pas <- pas %>% dplyr::filter(gene_count >= 10 & PAU >=0.05 & PAU <= 0.95) %>%  dplyr::select(Chr,Start,End,PAS_ID, gene_name,Strand) %>% arrange(Chr, Start, End)
 pas$Start=pas$Start+1
 pas.base <- tibble::as_tibble(pas) %>% dplyr::group_by(Chr,Strand,gene_name) %>% 
   dplyr::mutate(count = paste0(gene_name, ":T", sprintf("%02d", sequence(dplyr::n())))) %>%
@@ -34,56 +42,34 @@ pas.base <- tibble::as_tibble(pas) %>% dplyr::group_by(Chr,Strand,gene_name) %>%
 
 
 pas.anno <- DataFrame(count=elementMetadata(pas.base)$count,
-                      PAS_ID_new=elementMetadata(pas.base)$PAS_ID_new)
+                      PAS_ID_new=elementMetadata(pas.base)$PAS_ID)
 colnames(pas.anno) <- c("tes_id","pas_id")
 pas.anno <- as.data.frame(pas.anno)
 
+message("loading transcriptional start sites")
+SE.anno<- fread(se.anno, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+SE.anno <- SE.anno[SE.anno$gene_name %in% unique(pas$gene_name), ]
 
-##prepare alternative splcied exon reference
-refAnnotation <- rtracklayer::import.gff(annot_path)
-valid_chromosomes <- paste0("chr", c(1:22, "X","Y"))
-utr <- refAnnotation[refAnnotation$type=="3UTR",]
-refAnnotation <- refAnnotation[seqnames(refAnnotation) %in% valid_chromosomes]
-refExons <- refAnnotation[refAnnotation$type == "exon"]
+SE.ref <- GRanges(
+  seqnames = SE.anno$seqnames,
+  ranges = IRanges(start = SE.anno$start, end = SE.anno$end),
+  strand = SE.anno$strand,
+  value.group_name = SE.anno$gene_name,
+  count = SE.anno$count
+)
+
+SE.anno$exon <- paste0(SE.anno$seqnames,":", SE.anno$start,"-",SE.anno$end, ":", SE.anno$strand)
+SE.anno$SE_id <-  SE.anno$count
+SE.anno <- SE.anno  %>%  select(SE_id,exon)
 
 ##prepare bam file, extract read coordinate and exon coordinate
+message("loading BAM files")
 bamAlignments <- GenomicAlignments::readGAlignments(bam, use.names = TRUE)
 read_junctions <- GenomicAlignments::junctions(bamAlignments, use.mcols = TRUE)
 valid_chromosomes <- paste0("chr", c(1:22, "X", "Y"))
 alignments <- GenomicRanges::GRanges(bamAlignments)
 alignments$name <- names(bamAlignments)
 names(alignments) <- NULL
-
-##remove the first and last exon of each transcript. Only retain the alternative spliced exons
-get_ref_exon <- function(exon_in_reference) {
-    exons_df <- as.data.frame(exon_in_reference)
-    exons_df <-  exons_df %>% arrange(gene_id, transcript_id, start)
-    #exons_filtered <- exons_df %>% group_by(gene_id, transcript_id) %>% filter(row_number() != 1 & row_number() != n())
-    exon_counts <- exons_df %>% group_by(gene_id, start, end) %>%  summarize(transcript_count = n_distinct(transcript_id))
-    max_transcript_counts <- exons_df %>% group_by(gene_id) %>% summarize(max_transcripts = n_distinct(transcript_id))
-    alternative_exons <- exon_counts %>%  left_join(max_transcript_counts, by = "gene_id") %>% filter(transcript_count < max_transcripts)
-    alternative_exons_df <- alternative_exons %>% inner_join(exons_df, by = c("gene_id", "start", "end"))
-    alternative_exons <- unique(alternative_exons_df %>% select(seqnames,start,end,gene_id,strand))
-    granges_bed <- makeGRangesFromDataFrame(alternative_exons, 
-                                        seqnames.field = "seqnames", 
-                                        start.field = "start", 
-                                        end.field = "end", 
-                                        strand.field = "strand", 
-                                        keep.extra.columns = TRUE)
-    overlaps <- findOverlaps(granges_bed, granges_bed)
-    # Identify the indices of overlapping exons 
-    overlap_indices <- queryHits(overlaps)[subjectHits(overlaps) != queryHits(overlaps)]
-    # Remove overlapping exons
-    non_overlapping_granges <- granges_bed[-unique(overlap_indices)] 
-    non_overlapping_df <- as.data.frame(non_overlapping_granges)
-    SE <- non_overlapping_df %>% arrange(seqnames, start, end)
-    SE.ref <- tibble::as_tibble(SE) %>% dplyr::group_by(gene_id) %>% 
-    dplyr::mutate(count = paste0(gene_id, ":SE", sprintf("%02d", sequence(dplyr::n())))) %>%
-    GenomicRanges::makeGRangesFromDataFrame(., keep.extra.columns = TRUE)
-    overlaps <- findOverlaps(SE.ref, utr, maxgap = 10)
-    SE.ref <- SE.ref[-queryHits(overlaps)]
-    return(SE.ref)
-}
 
 prepareForCountEnds <- function(x, window) {
    alignments <- x
@@ -196,7 +182,6 @@ get_read_count <- function(alignmentsFile , exon_in_reference){
   return(countedPairs)
 }
 
-SE.ref <- get_ref_exon(refExons)
 
 message("counting polyA reads")
 endsAlignemnts <-  prepareForCountEnds(alignments, 1)
@@ -217,12 +202,11 @@ counts <- counts %>% mutate(in_in = pmax(in_in, 0), in_out = pmax(in_out, 0))
 counts <- counts %>%  group_by(SE_id) %>% filter(dplyr::n() > 1) %>% ungroup()
 counts <-  left_join(counts, pas.anno, by = "tes_id") 
 
-
 merged_data <- counts %>% select(SE_id,pas_id) %>%
   group_by(SE_id) %>%
   summarize(pas_id = str_c(pas_id, collapse = ";"))
 
-write.table(counts,"TSS-exon.coordination.count.txt",sep="\t",quote=F, row.names = F)
+write.table(counts,"PAS-exon.coordination.count.txt",sep="\t",quote=F, row.names = F)
 
 chisq_test <- function(counts){
     gene_matrices <- counts %>%
@@ -255,42 +239,16 @@ chisq_df <- data.frame(
   chisq_df <- chisq_df[order(chisq_df$p_value), ]
   chisq_df$FDR <- p.adjust(chisq_df$p_value, method = "BH")
   chisq_df$SE_id <-  rownames(chisq_df)
-  
-  SE.ref2 <- as.data.frame(SE.ref)
-  SE.ref2$exon <- paste0(SE.ref2$seqnames,":", SE.ref2$start,"-",SE.ref2$end, ":", SE.ref2$strand)
-  SE.ref2$SE_id <-  SE.ref2$count
-  SE.ref2 <- SE.ref2  %>%  select(SE_id,exon)
-              
-  results<- chisq_df %>% left_join(SE.ref2,by="SE_id")
+        
+  results<- chisq_df %>% left_join(SE.anno,by="SE_id")
   results<- results %>% left_join(merged_data,by="SE_id")
      return(results)
 }
 
 PAS_SE_co <- chisq_test(counts)
 PAS_SE_co <- PAS_SE_co[complete.cases(PAS_SE_co[, c("p_value", "FDR")]), ]
-PAS_SE_co$anno <- ifelse(PAS_SE_co$FDR < 0.05, "sig", "non_sig")
+PAS_SE_co$sig <- ifelse(PAS_SE_co$FDR < 0.05, "TRUE", "FALSE")
+PAS_SE_co$gene_id <- sapply(strsplit(as.character(PAS_SE_co$SE_id), ":"), function(x) x[1])
+
 write.table(PAS_SE_co, output, sep="\t",quote=F,row.names = F)
 
-exon <- "TPM2:SE01"
-count_exon <- counts[counts$SE_id==exon,]
-matrix <-  as.matrix(count_exon[,c(3,4)])
-rownames(matrix) <- count_exon$tes_id
-
-data_percentage <- apply(t(matrix), 2, function(x){x*100/sum(x,na.rm=T)})
-data_long <- reshape2::melt(data_percentage)
-colnames(data_long) <-c("group","TES","percentage")
-
-library(ggpubr)
-ggbarplot(data_long, 
-          x = "TES", 
-          y = "percentage", 
-          fill = "group", 
-          color = "group", 
-          palette = c("skyblue", "lightgrey")) + 
-  theme_minimal() + 
-  labs(y = "Percentage(%)", title=exon) + 
-  theme(legend.title = element_blank(),
-        axis.line = element_line(color = "black"),  
-        axis.title = element_text(color = "black",size = 14), 
-        axis.text = element_text(color = "black",size = 12), 
-        panel.border = element_rect(color = "black", fill = NA, linewidth = 1)) 

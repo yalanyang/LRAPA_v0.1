@@ -255,7 +255,7 @@ annotate_bed <- function(bed_file) {
   unique_annotated_bed$PAS_ID_new <- ifelse(unique_annotated_bed$V16 == ".", unique_annotated_bed$V5, unique_annotated_bed$V16)
   unique_annotated_bed <- unique_annotated_bed %>% group_by(V1, V2, V3) %>%  slice(1) %>% ungroup()
   colnames(unique_annotated_bed) = c("Chr",	"Start",	"End",	"Hexamer",	"PAS_ID",	"Strand",	"Count","UTR_id",	"Feature",
-                            "gene_name",	"gene_count",	"PAU", "annotated_PAS", "anno","annotated_PAS")
+                            "gene_name",	"gene_count",	"PAU", "annotated_PAS", "anno","PAS_ID_new")
   
   return(unique_annotated_bed)
 }

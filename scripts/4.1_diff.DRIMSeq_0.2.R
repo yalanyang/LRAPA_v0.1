@@ -28,10 +28,11 @@ group2_sample  <- opt$group2
 samples <- sample %>% dplyr::filter(sample$Group==group1_sample | sample$Group==group2_sample)
 sample_id <- samples$sample_id
 
-methods <- c("all","between","within")
+methods <- c("gene","ALE","TUTR")
 for (method in methods){
-if (method=="all") {
+if (method=="gene") {
   counts=count[,c("gene_name", "PAS_ID", sample_id)]
+  counts <- counts[rowSums(counts[, 3:(nrow(counts)-2)] > 10) > 0, ]
   colnames(counts)[1] <- "gene_id"
   colnames(counts)[2] <- "feature_id"
   merged_data <- counts %>% 
@@ -39,7 +40,7 @@ if (method=="all") {
     group_by(gene_id) %>%
     summarize(feature_id = str_c(feature_id, collapse = ";"))
   counts <- as.data.frame(counts)
-}else if(method=="between"){
+}else if(method=="ALE"){
   count <- count[count$Feature=="3UTR",]
   counts=count[,c("gene_name", "UTR_id", sample_id)]
   colnames(counts)[1] <- "gene_id"
@@ -53,7 +54,7 @@ if (method=="all") {
     group_by(gene_id) %>%
     summarize(feature_id = str_c(feature_id, collapse = ";"))
   counts <- as.data.frame(counts)
-}else if(method=="within"){
+}else if(method=="TUTR"){
   count <- count[count$Feature=="3UTR",]
   counts=count[,c("UTR_id", "PAS_ID", sample_id)]
   colnames(counts)[1] <- "gene_id"
@@ -109,7 +110,7 @@ group1 <- sample[sample$Group==group1_sample,"sample_id"]
 group2 <- sample[sample$Group==group2_sample,"sample_id"]
 
 
-if(method=="all" | method=="within"){
+if(method=="gene" | method=="TUTR"){
 counts$start <- sapply(strsplit(as.character(counts$feature_id), "_"), function(x) x[3])
 counts$strand <- sapply(strsplit(as.character(counts$feature_id), "_"), function(x) x[4])
 counts <- counts %>%
@@ -126,7 +127,7 @@ counts <- counts %>% filter(gene_id %in% filtered_genes)
 count_data <- counts %>%  select(-feature_id, -start, -strand) %>%  pivot_longer(-gene_id, names_to = 'sample_id', values_to = 'Count')
 count_data <- count_data %>% group_by(gene_id, sample_id) %>% mutate(PAU = Count / sum(Count)) %>% ungroup()
 
-}else if (method=="between"){
+}else if (method=="ALE"){
   counts$order <- counts$feature_id
   counts <- counts %>%
     separate(order, into = c(NA, NA, NA, NA, "utr"), sep = ":", convert = TRUE)
@@ -162,14 +163,14 @@ dpau_matrix$gDPAU2 <-  rowMeans(dpau_matrix[group2],na.rm = TRUE)
 
 dpau_matrix$dgDPAU <- dpau_matrix$gDPAU1 -dpau_matrix$gDPAU2
 
-if(method=="all" | method=="within"){
+if(method=="gene" | method=="TUTR"){
 dpau_matrix$Note <- ifelse(dpau_matrix$dgDPAU > 0, "lengthen", "shorten")
-}else if (method=="between"){
+}else if (method=="ALE"){
   dpau_matrix$Note <- ifelse(dpau_matrix$dgDPAU > 0, "distal", "proximal")
 
 }
 res <- res %>% left_join(dpau_matrix, by ="gene_id")
 res <- res %>% left_join(merged_data, by ="gene_id")
-res$sig <- ifelse(abs(res$dgDPAU) >= 0.1 & res$adj_pvalue <= 0.05 , "Yes", "No")
+res$sig <- ifelse(abs(res$dgDPAU) >= 0.1 & res$adj_pvalue <= 0.05 , "TRUE", "FALSE")
 write.table(res, paste0(group1_sample, '_', group2_sample, '.', method, ".diff.DRIMSeq.txt"), sep = "\t", row.names = FALSE, quote = FALSE)
 }
