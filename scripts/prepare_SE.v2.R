@@ -80,14 +80,14 @@ get_ref_exon <- function(exon_in_reference) {
                                             end.field = "end", 
                                             strand.field = "strand", 
                                             keep.extra.columns = TRUE)
-    overlaps <- findOverlaps(granges_bed, granges_bed)
+    #overlaps <- findOverlaps(granges_bed, granges_bed)
     # Identify the indices of overlapping exons 
-    overlap_indices <- queryHits(overlaps)[subjectHits(overlaps) != queryHits(overlaps)]
+    #overlap_indices <- queryHits(overlaps)[subjectHits(overlaps) != queryHits(overlaps)]
     # Remove overlapping exons
-    non_overlapping_granges <- granges_bed[-unique(overlap_indices)] 
-    overlaps2 <- findOverlaps(non_overlapping_granges, exons_df_out1_bed)
+    #non_overlapping_granges <- granges_bed[-unique(overlap_indices)] 
+    overlaps2 <- findOverlaps(granges_bed, exons_df_out1_bed)
     overlap_indices2 <- queryHits(overlaps2)[subjectHits(overlaps2) != queryHits(overlaps2)]
-    non_overlapping_exon2 <- non_overlapping_granges[-unique(overlap_indices2)] 
+    non_overlapping_exon2 <- granges_bed[-unique(overlap_indices2)] 
     non_overlapping_exon2 <- as.data.frame(non_overlapping_exon2)
     SE <- non_overlapping_exon2 %>% arrange(seqnames, start, end)
     SE.ref <- tibble::as_tibble(SE) %>% dplyr::group_by(gene_name) %>% 

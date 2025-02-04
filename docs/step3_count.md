@@ -29,15 +29,12 @@ The output count format:
 ## 3.2 Single-cell long-read RNA-seq
 
 ``` shell
-lrapa scCount -b scLR.bam -p test.PAS.bed -o RUN3 -w barcode.rev.txt
+lrapa scCount -b scLR.bam -p test.PAS.bed -o test -w barcode.txt
 ```
 
 **Parameters**
 
 -   `-i, --input`: Input scRNA-seq BAM file (required).
-
 -   `-p, --pas`: PAS reference TXT file with BED columns followed by annotations (required).
-
 -   `-o, --output`: Output folder for the count matrix (required).
-
--   `-w, --barcode`: Hitlist barcodes.
+-   `-w, --barcode`: Barcode file.

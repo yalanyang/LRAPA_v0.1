@@ -329,12 +329,12 @@ ALE <- function(data) {
 between_PAS_gene <- betweenPAS_gene(PAS)
 write.table(between_PAS_gene, paste0(group1, '_', group2, ".diff.betweenPAS_gene_level.txt"), sep = "\t", row.names = FALSE, quote = FALSE)
 
-between_PAS <- betweenPAS(PAS)
-write.table(between_PAS, paste0(group1, '_', group2, ".diff.betweenPAS.txt"), sep = "\t", row.names = FALSE, quote = FALSE)
+#between_PAS <- betweenPAS(PAS)
+#write.table(between_PAS, paste0(group1, '_', group2, ".diff.betweenPAS.txt"), sep = "\t", row.names = FALSE, quote = FALSE)
 
 PAS <- PAS[PAS$Feature=="3UTR",]
 within_3UTR <- within_3UTR(PAS)
-between_3UTR <- between_3UTR(PAS)
+between_3UTR <- ALE(PAS)
 write.table(within_3UTR, paste0(group1, '_', group2, ".PAS.diff.TUTR.txt"), sep = "\t", row.names = FALSE, quote = FALSE)
 write.table(between_3UTR, paste0(group1, '_', group2, ".PAS.diff.ALS.txt"), sep = "\t", row.names = FALSE, quote = FALSE)   
 cat("Analysis complete", "\n")

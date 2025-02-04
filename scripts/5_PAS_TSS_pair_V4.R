@@ -37,8 +37,7 @@ TSS_database <- GRanges(
   seqnames = TSS.anno$seqnames,
   ranges = IRanges(start = TSS.anno$start, end = TSS.anno$end),
   strand = TSS.anno$strand,
-  value.group = TSS.anno$value.group,
-  value.group_name = TSS.anno$value.group_name,
+  gene_name = TSS.anno$gene_name,
   count = TSS.anno$count
 )
 
@@ -87,8 +86,8 @@ prepareForCountEnds <- function(x, window) {
   neg <- alignments[alignments@strand == "-",]
   GenomicRanges::start(pos) <- GenomicRanges::end(pos) - window
   GenomicRanges::end(neg) <- GenomicRanges::start(neg) + window
-  shortstarts <- c(pos, neg)
-  return(shortstarts)
+  shortsend <- c(pos, neg)
+  return(shortsend)
 }
 
 readTSSassignment <- function(startsAlignemnts, TSSCoordinate.base) {
@@ -137,10 +136,9 @@ countLinks <- function(alignmentsFile, TSSDatabase, PAS) {
   endsAlignemnts <- readTESassignment(endsAlignemnts, PAS)
   endsAlignemnts <- endsAlignemnts %>% as.data.frame(.) %>% dplyr::select(name, tes_id)
   # make pairs
-  pairsTested <-
-    left_join(endsAlignemnts,
-              startAlignments,
-              by = "name") %>% dplyr::filter(gsub("\\:.*", "", tes_id) == gsub("\\:.*", "", promoter_id)) 
+  pairsTested <- left_join(endsAlignemnts, startAlignments, by = "name") 
+
+  pairsTested <- pairsTested %>% dplyr::filter(gsub("\\:.*", "", tes_id) == gsub("\\:.*", "", promoter_id)) 
   
   pairsTested <- pairsTested %>% mutate(gene_id =  gsub(":.*", "", pairsTested$promoter_id))
 
@@ -167,9 +165,9 @@ countLinks <- function(alignmentsFile, TSSDatabase, PAS) {
     )
   # normalize expression in CPMs
   counts_final <- list()
-  dd <- edgeR::DGEList(counts = countedPairsFinal$read_counts)
-  dge <- edgeR::calcNormFactors(dd)
-  countedPairsFinal$cpm <- as.numeric(edgeR::cpm(dge))
+  #dd <- edgeR::DGEList(counts = countedPairsFinal$read_counts)
+  #dge <- edgeR::calcNormFactors(dd)
+  #countedPairsFinal$cpm <- as.numeric(edgeR::cpm(dge))
   counts_final$countedPairsFinal <- countedPairsFinal
   counts_final$pairsTested <- pairsTested
   

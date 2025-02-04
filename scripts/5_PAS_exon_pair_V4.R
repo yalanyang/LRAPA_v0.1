@@ -46,7 +46,7 @@ pas.anno <- DataFrame(count=elementMetadata(pas.base)$count,
 colnames(pas.anno) <- c("tes_id","pas_id")
 pas.anno <- as.data.frame(pas.anno)
 
-message("loading transcriptional start sites")
+message("Loading Skipped exons")
 SE.anno<- fread(se.anno, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 SE.anno <- SE.anno[SE.anno$gene_name %in% unique(pas$gene_name), ]
 
@@ -63,16 +63,18 @@ SE.anno$SE_id <-  SE.anno$count
 SE.anno <- SE.anno  %>%  select(SE_id,exon)
 
 ##prepare bam file, extract read coordinate and exon coordinate
-message("loading BAM files")
+message("Loading BAM file")
 bamAlignments <- GenomicAlignments::readGAlignments(bam, use.names = TRUE)
 read_junctions <- GenomicAlignments::junctions(bamAlignments, use.mcols = TRUE)
 valid_chromosomes <- paste0("chr", c(1:22, "X", "Y"))
+bamAlignments <- bamAlignments[seqnames(bamAlignments) %in% valid_chromosomes]
+read_junctions <- read_junctions[seqnames(read_junctions) %in% valid_chromosomes]
 alignments <- GenomicRanges::GRanges(bamAlignments)
 alignments$name <- names(bamAlignments)
 names(alignments) <- NULL
 
 prepareForCountEnds <- function(x, window) {
-   alignments <- x
+    alignments <- x
     pos <- alignments[alignments@strand == "+",]
     neg <- alignments[alignments@strand == "-",]
     GenomicRanges::start(pos) <- GenomicRanges::end(pos) - window
@@ -83,7 +85,7 @@ prepareForCountEnds <- function(x, window) {
 
 readTESassignment <- function(endsAlignements, TESCoordinate.base) {
   tesDb <- TESCoordinate.base
-  ovlps <- findOverlaps(endsAlignements , tesDb , maxgap = 24)
+  ovlps <- findOverlaps(endsAlignements , tesDb , maxgap = 150)
   tesIds <- tesDb[subjectHits(ovlps),]$count
   endStarts <- GenomicRanges::start(tesDb[subjectHits(ovlps),])
   endsAlignemnts2 <- endsAlignements[queryHits(ovlps),]
@@ -99,7 +101,6 @@ readTESassignment <- function(endsAlignements, TESCoordinate.base) {
 }
 
 get_exon_count <- function(read_junctions,exon_in_reference){
-  read_junctions <- read_junctions[seqnames(read_junctions) %in% valid_chromosomes]
   gr <- unlist(read_junctions)
   gr$read_id <- names(gr)
   names(gr) <- NULL

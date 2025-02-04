@@ -61,15 +61,13 @@ We used a Benjamini--Hochberge correction for multiple testing.
 If a gene's absolute mean difference of DPAU/gDPAU is \>0.3 and adjusted *P* value is \< 0.01 between two groups, the gene's APA change between two groups will be deemed as significant.
 
 ``` shell
-lrapa norepdiff -i test.PAS.count.txt -c N1 -n C1
+lrapa norepdiff -i test.PAS.count.txt -c sample1 -n sample2
 ```
 
 **Parameters**
 
 -   `-i, --input`: count file of PAS sites (required).
-
 -   `-c, --group1`: sample 1 for differential analysis (required).
-
 -   `-n, --group2`: sample 2 for differential analysis (required).
 
     **Note:** The name of sample must same as in the count file.

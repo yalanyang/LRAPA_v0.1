@@ -32,7 +32,7 @@ methods <- c("gene","ALE","TUTR")
 for (method in methods){
 if (method=="gene") {
   counts=count[,c("gene_name", "PAS_ID", sample_id)]
-  counts <- counts[rowSums(counts[, 3:(nrow(counts)-2)] > 10) > 0, ]
+  counts <- counts[rowSums(counts[, 3:(ncol(counts)-2)] > 10) > 0, ]
   colnames(counts)[1] <- "gene_id"
   colnames(counts)[2] <- "feature_id"
   merged_data <- counts %>% 
@@ -111,8 +111,8 @@ group2 <- sample[sample$Group==group2_sample,"sample_id"]
 
 
 if(method=="gene" | method=="TUTR"){
-counts$start <- sapply(strsplit(as.character(counts$feature_id), "_"), function(x) x[3])
-counts$strand <- sapply(strsplit(as.character(counts$feature_id), "_"), function(x) x[4])
+counts$start <- sapply(strsplit(as.character(counts$feature_id), ":"), function(x) x[2])
+counts$strand <- sapply(strsplit(as.character(counts$feature_id), ":"), function(x) x[3])
 counts <- counts %>%
   arrange(gene_id, 
           case_when(

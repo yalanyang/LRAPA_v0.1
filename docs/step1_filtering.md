@@ -20,7 +20,7 @@ nav_order: 4
 The 12 PAS hexamers used here are "AATAAA", "TTTAAA", "AAGAAA", "AACAAA", "TATAAA", "AATGAA", "ATTAAA", "AGTAAA", "AATATA", "CATAAA", "ACTAAA", "GATAAA", which is adopted from [our previous study.](https://genome.cshlp.org/content/33/10/1774.full)
 
 ``` shell
-lrapa filter -i test.flnc.filter.bam -r $reference/GRCh38.primary_assembly.genome.fa -o test.HQ.qname.txt
+lrapa filter -i test.flnc.filter.bam -r genome.fa -o test.HQ.qname.txt
 ```
 
 **Parameters**
