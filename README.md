@@ -13,4 +13,5 @@ The complete LRAPA manual is available via the [github page](https://yalanyang.g
 **Contributions**
 
 This package is developed and maintained by Dr. Yalan Yang (yangyalan@uchicago.edu) at [Zhang lab](https://www.zhanglaboratory.org), the Department of Human Genetics, The University of Chicago. 
+
 If you want to contribute the package, please leave an issue. Thank you.
