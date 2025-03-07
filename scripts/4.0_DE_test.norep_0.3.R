@@ -190,7 +190,7 @@ results_df$sig <- ifelse(abs(results_df$dgDPAU) >= 0.1 & results_df$adj_pvalue <
 return(results_df)
 }
 
-within_3UTR <- function(data) {
+TUTR <- function(data) {
   results <- list()
   data$start <- sapply(strsplit(as.character(data$PAS_ID), ":"), function(x) x[2])
   data$strand <- sapply(strsplit(as.character(data$PAS_ID), ":"), function(x) x[3])
@@ -333,8 +333,8 @@ write.table(between_PAS_gene, paste0(group1, '_', group2, ".diff.betweenPAS_gene
 #write.table(between_PAS, paste0(group1, '_', group2, ".diff.betweenPAS.txt"), sep = "\t", row.names = FALSE, quote = FALSE)
 
 PAS <- PAS[PAS$Feature=="3UTR",]
-within_3UTR <- within_3UTR(PAS)
+within_3UTR <- TUTR(PAS)
 between_3UTR <- ALE(PAS)
 write.table(within_3UTR, paste0(group1, '_', group2, ".PAS.diff.TUTR.txt"), sep = "\t", row.names = FALSE, quote = FALSE)
-write.table(between_3UTR, paste0(group1, '_', group2, ".PAS.diff.ALS.txt"), sep = "\t", row.names = FALSE, quote = FALSE)   
+write.table(between_3UTR, paste0(group1, '_', group2, ".PAS.diff.ALE.txt"), sep = "\t", row.names = FALSE, quote = FALSE)   
 cat("Analysis complete", "\n")
