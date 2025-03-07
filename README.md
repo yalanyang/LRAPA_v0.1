@@ -6,10 +6,11 @@ Long-read Alternative Polyadenylation (LRAPA) is an R package specifically desig
 
 ![](images/APA_workflow.png)
 
-The complete LRAP manual is available via the [github page](https://yalanyang.github.io/LRAPA_v0.1).
+The complete LRAPA manual is available via the [github page](https://yalanyang.github.io/LRAPA_v0.1).
 
 
 
 **Contributions**
 
-This package is developed and maintained by Yalan Yang (yangyalan@uchicago.edu) at the Department of Human Genetics, The University of Chicago. If you want to contribute the package, please leave an issue. Thank you.
+This package is developed and maintained by Dr. Yalan Yang (yangyalan@uchicago.edu) at [Zhang lab](https://www.zhanglaboratory.org), the Department of Human Genetics, The University of Chicago. 
+If you want to contribute the package, please leave an issue. Thank you.
