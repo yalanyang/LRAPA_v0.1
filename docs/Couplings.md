@@ -10,7 +10,9 @@ nav_order: 8
 
 ## 1 TSS-PAS coupling
 
-![](images/TSS-polyA.png)TSS: Transcriptional start site We counted 5ʹ-3ʹ isoforms using GenomicFeatures. Each Pacbio cDNA read was assigned to a TSS in a window of 50 nt and to a PA. Only the reads that mapped to both features were retained and considered full-length reads. Counts were summarized in 5ʹ-3ʹ isoforms, resulting in counts for each 5ʹ-3ʹ combination.
+![](images/TSS-polyA.png)TSS: Transcriptional start site.
+
+We counted 5ʹ-3ʹ isoforms using GenomicFeatures. Each Pacbio cDNA read was assigned to a TSS in a window of 50 nt and to a PA. Only the reads that mapped to both features were retained and considered full-length reads. Counts were summarized in 5ʹ-3ʹ isoforms, resulting in counts for each 5ʹ-3ʹ combination.
 
 ``` shell
 lrapa couplingTSS -i test.mapping.bam -s TSS.ref.txt -p test.PA.bed -o TSS-PA.coordination.txt
