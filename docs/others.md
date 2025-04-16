@@ -6,7 +6,13 @@ nav_order: 9
 
 # **File conversion scripts**
 
-get3UTR_0.1.R : get the 3'UTR reference for PAS analysis
+get3UTR_0.1.R: get the 3'UTR reference for PA analysis.
+
+gDUPI_cal_final.R: calculate the gDUPI value per gene or 3'UTR based on the count matrix.
+
+prepare_SE.v2.R: get the SE reference for PA analysis based on the reference annotation file (GTF format).
+
+prepare_TSS.v1.R: get the TSS reference for PA analysis based on the reference annotation file (GTF format).
 
 # **Additional programs**
 
