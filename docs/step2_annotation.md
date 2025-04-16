@@ -25,4 +25,4 @@ lrapa anno -i test.HQ.bam -r ref.genome.fa -g refGene.gtf -u refGene.3utr.bed -o
 
 **Note:** if you find that this script needs a lot of memory or very slow you may want to split the input bam file by chromosome and run these separately. We do intend to improve this.
 
-The 3'-UTR reference (refGene.3utr.bed) is generated using the get3UTR_0.1.R script in the scripts file.
+The 3'-UTR reference (refGene.3utr.bed) is generated using the get3UTR_0.1.R script in the scripts file, as shown in the [**Other**](https://yalanyang.github.io/LRAPA_v0.1/others.html) section.

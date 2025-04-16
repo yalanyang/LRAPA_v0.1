@@ -11,7 +11,7 @@ This step is used to obtain long-reads capturing cleavage and polyadenylation ev
 > To obtain reads capturing cleavage and polyadenylation events, the 3′-most position of mapped base of the read was tentatively considered as the putative cleavage site. The 3′-end of the read was required to contain a soft-clipped sequence, mostly composed of adenines (or thymines for the reverse strand to ensure the read contain a polyA tail. Reads were retained if the soft-clipped sequence was \<20 nucleotides and ≥95% adenosines, or if ≥20 nucleotides, the first 20 contained ≥80% adenosines, and the next 20 had ≥ 95%. To exclude internal priming, the −10 to +10 nt region around the putative cleavage site could not contain a stretch of six consecutive adenines. Additionally, the region −40 to −1 nt upstream of the putative cleavage site had to include one of 12 canonical PA hexamers (AAUAAA, AUUAAA, UUUAAA, AAGAAA, AACAAA, UAUAAA, AAUGAA, AGUAAA, AAUAUA, CAUAAA, ACUAAA, GAUAAA).
 
 ``` shell
-lrapa filter -i test.flnc.filter.bam -r genome.fa -o test.HQ.qname.txt
+lrapa filter -i test.flnc.filter.bam -r ref.genome.fa -o test.HQ.qname.txt
 ```
 
 **Parameters**

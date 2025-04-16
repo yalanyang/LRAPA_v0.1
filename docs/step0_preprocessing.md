@@ -6,10 +6,9 @@ nav_order: 3
 
 # **Step 0. Pre-processing of the long-read CCS reads**
 
-## 0.1. bulk long-read RNA-seq
+## 0.1. Bulk long-read RNA-seq
 
-LRAPA accept the PacBio CCS bam file as the input. The test data could be found in the test_data files.
-Removal of primers from the CCS reads is performed using [lima](https://isoseq.how).
+LRAPA accepts the PacBio CCS bam file as the input. The test data could be found in the test_data files. Removal of primers from the CCS reads is performed using [lima](https://isoseq.how).
 
 ``` shell
 lima test.ccs.bam IsoSeq_v2_primers_12.fasta test.fl.bam --isoseq --peek-guess
@@ -29,7 +28,7 @@ isoseq3 refine test.fl_flipped.bam PB_adapters.fasta test.flnc.bam
 
 **Note**: We don't trim poly(A) tails because we aim to assess whether each read contains a genuine poly(A) signal, based on the length and base composition of its poly(A) tail.
 
-We next align the long-reads to the reference genome with Minimap2. The human reference genome could found here: [GRCh38 human reference genome](https://www.gencodegenes.org/human/release_21.html) 
+We next align the long-reads to the reference genome (FASTA format) with Minimap2. The human reference genome could found here: [GRCh38 human reference genome](https://www.gencodegenes.org/human/release_21.html)
 
 ``` shell
 bamtools convert -format fastq -in test.flnc.bam -out test.flnc.fastq
@@ -51,6 +50,7 @@ isoseq3 dedup test.tagged.refine.corrected.bam test.tagged.refine.corrected.dedu
 ```
 
 We next align the long-reads to the reference genome with pbmm2, as recommended by Iso-Seq.
+
 ``` shell
 pbmm2 align --preset ISOSEQ --sort test.tagged.refine.corrected.bam ref.genome.fa test.mapped.bam
 samtools view -O BAM -F 2052 -h test.mapped.sam |  samtools sort -O BAM -@ 7 -o test.unique.bam -
