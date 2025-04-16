@@ -58,4 +58,4 @@ lrapa couplingSE -i test.full_length.bam -s SE.ref.txt -p test.PA.bed -o PAS-exo
 
 -   `-o, --output`: Output TSS-exon_coordination file (required).
 
-**Note:** Annotated TSS and SE files could be generated as shown in the **Other** section.
+**Note:** Annotated TSS and SE files could be generated as shown in the [**Other**](https://yalanyang.github.io/LRAPA_v0.1/others.html) section.
