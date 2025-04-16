@@ -10,19 +10,20 @@ nav_order: 7
 
 ## PAS usage index
 
+
+We quantified PAs using the metric “polyA site usage” (PAU). The PAU for a PA is the ratio of its read count to the sum of read counts of all detected PAs from its gene, which ranges from 0 to 1. 
+
 For genes with two polyA sites, we used DPAU to quantify the percentage of DPAU for each gene. DPAU ranges from 0 to 1.
 
 ![](images/DPAU.png)
 
-For genes with more than two polyA sites, [gDPAU](https://www.pnas.org/doi/10.1073/pnas.2113504119) is used to quantify the trend of distal polyA site usage for each gene. It is a location index weighted sum of read count percentage of gene's each polyA site. E.g., for a gene with n (n≥2) polyA sites, p1, p2, ..., pn represent the percentages of its polyA site usage at each site from 5′-end to 3′-end.
+For genes or 3’-UTRs with two PAs, we used the distal polyA site usage index (DPAU) to quantify the PAU usage of each gene or 3'-UTR, which is the ratio of reads at distal PAs to the sum of reads at distal and proximal PAs. 
+
+For genes or 3'-UTRs with more than two PAs, generalized DPAU ([gDPAU](https://www.pnas.org/doi/10.1073/pnas.2113504119) was used to quantify the trend of distal PA usage for each gene or 3’-UTR as previous reported18. It is a location index weighted PAU of each PA. When n = 2, DPAU = gDPAU. DPAU and gDPAU ranges from 0 to 1, where higher values indicate a greater likelihood of distal PA usage within a gene or a 3'-UTR, and vice versa. 
 
 ![](images/gDUAP.png)
 
 When n = 2, gDPAU = DPAU.
-
-**Reference:**
-
-[Wang J, Chen W, Yue W, et al. Comprehensive mapping of alternative polyadenylation site usage and its dynamics at single-cell resolution[J]. Proceedings of the National Academy of Sciences, 2022, 119(49): e2113504119.](https://www.pnas.org/doi/abs/10.1073/pnas.2113504119)
 
 ## 4.1. With replicates
 
@@ -32,7 +33,7 @@ lrapa diff -i test.PAS.count.txt -s sample.txt -c case -n control
 
 This module performs differential APA usage analyses between exactly two conditions with two or more replicates based the R package [DRIMSeq](http://bioconductor.org/packages/release/bioc/html/DRIMSeq.html). This is done by testing if the ratio of APA changes between conditions.
 
-If a gene's absolute mean difference of DPAU/gDPAU is \>0.1 and adjusted *P* value is \< 0.01 between two groups, the gene's APA change between two groups will be deemed as significant.
+If a gene's absolute mean difference of DPAU/gDPAU is \>0.1 and adjusted *P* value is \< 0.05 between two groups, the gene's APA change between two groups will be deemed as significant.
 
 **Parameters**
 
@@ -54,11 +55,11 @@ Example file of sample information
 
 ## 4.2. No replicates
 
-This module performs differential APA usage analyses between exactly two conditions with no replicate based chisq test. For each test, a n × 2 matrix per PAS site was generated, with the n polyA forming rows and read count in the two conditions forming columns.
+This module performs differential APA usage analyses between exactly two conditions with no replicate based chisq test. For each test, a n × 2 matrix per gene or 3'-UTR was generated, with the n PA forming rows and read count in the two conditions forming columns.
 
 We used a Benjamini--Hochberge correction for multiple testing.
 
-If a gene's absolute mean difference of DPAU/gDPAU is \>0.3 and adjusted *P* value is \< 0.01 between two groups, the gene's APA change between two groups will be deemed as significant.
+If a gene's absolute mean difference of DPAU/gDPAU is \>0.2 and adjusted *P* value is \< 0.05 between two groups, APA change between two groups will be deemed as significant.
 
 ``` shell
 lrapa norepdiff -i test.PAS.count.txt -c sample1 -n sample2
@@ -71,3 +72,5 @@ lrapa norepdiff -i test.PAS.count.txt -c sample1 -n sample2
 -   `-n, --group2`: sample 2 for differential analysis (required).
 
     **Note:** The name of sample must same as in the count file.
+
+The diff function categorizes genes into three classes based on differential usage patterns: (1) Differential APA genes: Genes in which multiple PAs are differentially utilized, non-3'-UTR PAs are also included for statistical analysis; (2) Differential TUTR-APA genes: Genes where multiple PAs within the same 3'-UTR are differentially utilized; (3) Differential ALS-APA genes: Genes in which multiple 3'-UTRs are differentially utilized, combining multiple PAs within the 3'-UTR. The outputs generated three files for these differential usage patterns.

@@ -8,9 +8,8 @@ nav_order: 3
 
 ## 0.1. bulk long-read RNA-seq
 
-Here, we used one of the three cerebellum samples downloaded from [Pacbio](https://downloads.pacbcloud.com/public/dataset/Kinnex-full-length-RNA/) as test data.
-
-Removal of primers is performed using [lima](https://isoseq.how).
+LRAPA accept the PacBio CCS bam file as the input. The test data could be found in the test_data files.
+Removal of primers from the CCS reads is performed using [lima](https://isoseq.how).
 
 ``` shell
 lima test.ccs.bam IsoSeq_v2_primers_12.fasta test.fl.bam --isoseq --peek-guess
@@ -28,23 +27,23 @@ samtools view -bS test.fl_flipped.sam > test.fl_flipped.bam
 isoseq3 refine test.fl_flipped.bam PB_adapters.fasta test.flnc.bam
 ```
 
-**Note**: We did not trim poly(A) tails in this analysis because we aimed to assess whether each read contains a genuine poly(A) signal, based on the length and base composition of its poly(A) tail.
+**Note**: We don't trim poly(A) tails because we aim to assess whether each read contains a genuine poly(A) signal, based on the length and base composition of its poly(A) tail.
 
-We next align the long-reads to the [GRCh38 human reference genome](https://www.gencodegenes.org/human/release_21.html) with Minimap2 or pbmm2.
+We next align the long-reads to the reference genome with Minimap2. The human reference genome could found here: [GRCh38 human reference genome](https://www.gencodegenes.org/human/release_21.html) 
 
 ``` shell
 bamtools convert -format fastq -in test.flnc.bam -out test.flnc.fastq
-minimap2  -ax splice -uf -C5 $reference/GRCh38.primary_assembly.genome.fa test.flnc.fastq > test.flnc.mapping.sam
+minimap2  -ax splice -uf -C5 ref.genome.fa test.flnc.fastq > test.flnc.mapping.sam
 samtools view -O BAM -F 2052 -h test.flnc.mapping.sam |  samtools sort -O BAM -@ 7 -o test.flnc.unique.bam -
 samtools view -h test.flnc.unique.bam | awk '$10 != "*"' |samtools view -bS - > test.flnc.filter.bam
 ```
 
 ## 0.2. Single-cell long-read RNA-seq
 
-For single-cell long-read data, we used the [isoseq pipeline](https://isoseq.how/umi/cli-workflow.html) to process the CCS reads. The tag function clips UMIs and cell barcodes from the reads and associates them with the reads for later deduplication. We retained the poly(A) tail in the isoseq refine function for the downstream APA analysis.
+For single-cell long-read data, we use the [isoseq pipeline](https://isoseq.how/umi/cli-workflow.html) to process the CCS reads. The tag function clips UMIs and cell barcodes from the reads and associates them with the reads for later deduplication. We retain the poly(A) tail in the isoseq refine function for the downstream APA analysis.
 
 ``` shell
-lima --isoseq --dump-clips --peek-guess -j 24 test.hifi_reads.bam 10x_Chromium_3p_primers.fasta test.fl.bam
+lima --isoseq --dump-clips --peek-guess -j 24 test.sc.hifi_reads.bam 10x_Chromium_3p_primers.fasta test.fl.bam
 isoseq3 tag test.fl.5p--3p.bam test.5p--3p.tagged.bam --design T-12U-16B
 isoseq3 refine test.5p--3p.tagged.bam 10x_Chromium_3p_primers.fasta test.tagged.refine.bam
 isoseq3 correct test.tagged.refine.bam --barcodes 3M-february-2018-REVERSE-COMPLEMENTED.txt test.tagged.refine.corrected.bam
