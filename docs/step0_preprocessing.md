@@ -51,7 +51,7 @@ isoseq3 correct test.tagged.refine.bam --barcodes 3M-february-2018-REVERSE-COMPL
 isoseq3 dedup test.tagged.refine.corrected.bam test.tagged.refine.corrected.dedup.bam (optional)
 ```
 
-We next align the long-reads to the reference genome with pbmm2, as recommended by the Iso-Seq package.
+We next align the long-reads to the reference genome with pbmm2, as recommended by Iso-Seq.
 ``` shell
 pbmm2 align --preset ISOSEQ --sort test.tagged.refine.corrected.bam ref.genome.fa test.mapped.bam
 samtools view -O BAM -F 2052 -h test.mapped.sam |  samtools sort -O BAM -@ 7 -o test.unique.bam -

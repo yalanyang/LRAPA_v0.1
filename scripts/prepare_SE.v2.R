@@ -23,7 +23,7 @@ opt <- parse_args(opt_parser)
 annot_path <-opt$gtf
 output <- opt$output
 
-#Examples: Rscript prepare_SE.v1.R -g /Users/yangyalan/results/Long-read-APA-pipeline/reference/gencode.v40.annotation_utr.sorted.gtf -o /Users/yangyalan/results/Long-read-APA-pipeline/reference/Human.encode.V40.SE.ref.txt
+#Examples: Rscript prepare_SE.v1.R -g gencode.v40.annotation_utr.sorted.gtf -o Human.encode.V40.SE.ref.txt
 ##prepare alternative splcied exon reference
 message("Peparing alternatively skipped exons")
 refAnnotation <- rtracklayer::import.gff(annot_path)

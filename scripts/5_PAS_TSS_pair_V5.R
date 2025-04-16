@@ -2,6 +2,10 @@
 ## To remove genes from a GTF file where the distance between two or more of its non-overlapping transcripts exceeds 10 kb
 ## and remove genes that have transcripts in different strands, such as Gm2004 in mouse refgene.
 
+##  update: 03-28-2028.V5
+## For chisq.test,find the TSS-PAS pair with the highest contribution (dominant), returns the contribution and residual of dominant TSS-PAS pair.
+
+
 library(optparse)
 library(AnnotationDbi)
 
@@ -15,7 +19,7 @@ option_list <- list(
   make_option(c("-p", "--pas"), type="character", default=NULL,
               help="Reference polyA.bed", metavar="file")
 )
-#Examples: Rscript 5_PAS_TSS_pair_V4.R -i encode.mapping.unique.filter.bam -s /Users/yangyalan/results/Long-read-APA-pipeline/reference/Human.encode.V40.TSS.ref.txt -p /Users/yangyalan/results/Long-read-APA-pipeline/Encode/Encode.brain.new.PAS.bed -o TSS-TES.encode.coordination.chiqtest.txt
+#Examples: Rscript 5_PAS_TSS_pair_V5.R -i encode.mapping.unique.filter.bam -s human.refTSS_combine_gencode_refgene.txt -p /Users/yangyalan/results/Long-read-APA-pipeline/Encode/Encode.brain.new.PAS.bed -o TSS-TES.encode.coordination.chiqtest.txt
 opt_parser <- OptionParser(option_list=option_list)
 opt <- parse_args(opt_parser)
 bam <- opt$input
@@ -43,7 +47,7 @@ TSS_database <- GRanges(
 
 TSS.anno$Tss_id <-  paste0(TSS.anno$seqnames, ":", TSS.anno$start, ":", TSS.anno$strand)
 TSS.anno <- TSS.anno %>% dplyr::select(count, Tss_id)
-colnames(TSS.anno) <- c("promoter_id","tss_id")
+colnames(TSS.anno) <- c("tss_id","tss")
 
 message("preparing poly(A) sites")
 pas <- fread(pas.bed, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
@@ -51,14 +55,14 @@ pas <- pas[pas$Feature != "intergenic"]
 pas <- pas %>% dplyr::filter(gene_count >= 10 & PAU >=0.05 & PAU <= 0.95) %>%  dplyr::select(Chr,Start,End,PAS_ID, gene_name,Strand) %>% arrange(Chr, Start, End)
 pas$Start=pas$Start+1
 pas.base <- tibble::as_tibble(pas) %>% dplyr::group_by(Chr,Strand,gene_name) %>% 
-  dplyr::mutate(count = paste0(gene_name, ":T", sprintf("%02d", sequence(dplyr::n())))) %>%
+  dplyr::mutate(count = paste0(gene_name, ":PA", sprintf("%02d", sequence(dplyr::n())))) %>%
   GenomicRanges::makeGRangesFromDataFrame(., keep.extra.columns = TRUE)
 
 pas.anno <- DataFrame(count=elementMetadata(pas.base)$count,
                       PAS_ID=elementMetadata(pas.base)$PAS_ID)
 write.table(pas.anno,"pas.anno.txt",sep="\t",quote=F, row.names = F)
 
-colnames(pas.anno) <- c("tes_id","pas_id")
+colnames(pas.anno) <- c("pas_id","pas")
 pas.anno <- as.data.frame(pas.anno)
 message("poly(A) database sucessfully created")
 
@@ -96,7 +100,7 @@ readTSSassignment <- function(startsAlignemnts, TSSCoordinate.base) {
   promoterIds <- tssDb[subjectHits(ovlps),]$count
   promoterStarts <- GenomicRanges::start(tssDb[subjectHits(ovlps),])
   startsAlignemnts2 <- startsAlignemnts[queryHits(ovlps),]
-  startsAlignemnts2$promoter_id <- promoterIds
+  startsAlignemnts2$tss_id <- promoterIds
   startsAlignemnts2$promoterStarts <- promoterStarts
   startsAlignemnts2$dist2Assignment <-
     abs(GenomicRanges::start(startsAlignemnts2) - startsAlignemnts2$promoterStarts)
@@ -113,7 +117,7 @@ readTESassignment <- function(endsAlignements, TESCoordinate.base) {
   tesIds <- tesDb[subjectHits(ovlps),]$count
   endStarts <- GenomicRanges::start(tesDb[subjectHits(ovlps),])
   endsAlignemnts2 <- endsAlignements[queryHits(ovlps),]
-  endsAlignemnts2$tes_id <- tesIds
+  endsAlignemnts2$pas_id <- tesIds
   endsAlignemnts2$endStarts <- endStarts
   endsAlignemnts2$dist2Assignment <-
     abs(GenomicRanges::start(endsAlignemnts2) - endsAlignemnts2$endStarts)
@@ -130,25 +134,25 @@ countLinks <- function(alignmentsFile, TSSDatabase, PAS) {
   startAlignments <-
     startAlignments %>%
     as.data.frame(.) %>%
-    dplyr::select(name, promoter_id)
+    dplyr::select(name, tss_id)
   # make single nt ends
   endsAlignemnts <-  prepareForCountEnds(alignmentsFile, 1)
   endsAlignemnts <- readTESassignment(endsAlignemnts, PAS)
-  endsAlignemnts <- endsAlignemnts %>% as.data.frame(.) %>% dplyr::select(name, tes_id)
+  endsAlignemnts <- endsAlignemnts %>% as.data.frame(.) %>% dplyr::select(name, pas_id)
   # make pairs
   pairsTested <- left_join(endsAlignemnts, startAlignments, by = "name") 
 
-  pairsTested <- pairsTested %>% dplyr::filter(gsub("\\:.*", "", tes_id) == gsub("\\:.*", "", promoter_id)) 
+  pairsTested <- pairsTested %>% dplyr::filter(gsub("\\:.*", "", pas_id) == gsub("\\:.*", "", tss_id)) 
   
-  pairsTested <- pairsTested %>% mutate(gene_id =  gsub(":.*", "", pairsTested$promoter_id))
+  pairsTested <- pairsTested %>% mutate(gene_id =  gsub(":.*", "", pairsTested$tss_id))
 
   pairsTested <- pairsTested %>%
     mutate(pairs_id = paste0(
       gene_id,
       ":",
-      gsub(".*:", "", pairsTested$promoter_id),
+      gsub(".*:", "", pairsTested$tss_id),
       ":",
-      gsub(".*:", "", pairsTested$tes_id)
+      gsub(".*:", "", pairsTested$pas_id)
     ))
   # summarize only reads that expand both pairs
   countedPairs <- pairsTested %>%
@@ -178,17 +182,17 @@ message("counting links between TSS and TES")
 countData <- countLinks(alignments, TSS_database, pas.base)
 
 counts <- data.frame(countData$countedPairsFinal)
-counts <- counts %>% tidyr::separate(pairs_id, into = c("gene_id", "Promoter", "PAS"), sep = ":") %>% filter(read_counts > 5)
+counts <- counts %>% tidyr::separate(pairs_id, into = c("gene_id", "tss_id", "pas_id"), sep = ":") %>% filter(read_counts > 5)
 
 gene_summary <- counts %>%
   group_by(gene_id) %>%
   summarize(
-    num_promoters = n_distinct(Promoter),
-    num_PAS = n_distinct(PAS)
+    num_tss = n_distinct(tss_id),
+    num_PAS = n_distinct(pas_id)
   )
 
 genes_with_multiple <- gene_summary %>%
-  filter(num_promoters > 1, num_PAS > 1) %>%
+  filter(num_tss > 1, num_PAS > 1) %>%
   pull(gene_id)
 
 counts <- counts %>%
@@ -199,16 +203,16 @@ counts <- counts %>%
 write.table(counts,"TSS-polyA.coordination.count.txt",sep="\t",quote=F, row.names = F)
 
 counts_anno <- counts 
-counts_anno$promoter_id <- paste0(counts_anno$gene_id, ":", counts_anno$Promoter)
-counts_anno$tes_id <- paste0(counts_anno$gene_id, ":", counts_anno$PAS)
-counts_anno <- left_join(counts_anno,TSS.anno, by="promoter_id")
-counts_anno <- left_join(counts_anno,pas.anno, by="tes_id")
+counts_anno$tss_id <- paste0(counts_anno$gene_id, ":", counts_anno$tss_id)
+counts_anno$pas_id <- paste0(counts_anno$gene_id, ":", counts_anno$pas_id)
+counts_anno <- left_join(counts_anno,TSS.anno, by="tss_id")
+counts_anno <- left_join(counts_anno,pas.anno, by="pas_id")
 
-merged_data1 <- counts_anno %>% dplyr::select(gene_id,tss_id) %>% unique() %>% group_by(gene_id) %>%
-  summarize(tss_id = str_c(tss_id, collapse = ";"))
+merged_data1 <- counts_anno %>% dplyr::select(gene_id,tss) %>% unique() %>% group_by(gene_id) %>%
+  summarize(tss = str_c(tss, collapse = ";"))
 
-merged_data2 <- counts_anno %>% dplyr::select(gene_id,pas_id) %>% unique() %>% group_by(gene_id) %>%
-  summarize(pas_id = str_c(pas_id, collapse = ";"))
+merged_data2 <- counts_anno %>% dplyr::select(gene_id,pas) %>% unique() %>% group_by(gene_id) %>%
+  summarize(pas = str_c(pas, collapse = ";"))
 
 qname <- countData$pairsTested$name
 writeLines(unlist(qname), "TSS-TES.full-length.txt")
@@ -218,27 +222,75 @@ gene_matrices <- counts %>%
   group_split() %>%
   lapply(function(data) {
     data %>%
-      dplyr::select(Promoter, PAS, read_counts) %>%
-      pivot_wider(names_from = Promoter, values_from = read_counts) %>%
+      dplyr::select(tss_id, pas_id, read_counts) %>%
+      pivot_wider(names_from = tss_id, values_from = read_counts) %>%
       replace(is.na(.), 0)
   })
-names(gene_matrices) <- counts$gene_id %>% unique()
+#names(gene_matrices) <- counts$gene_id %>% unique()
+names(gene_matrices) <- counts %>%
+  group_by(gene_id) %>%
+  group_keys() %>%
+  pull(gene_id)
 
-message("Peforming statistics analysis")
-chisq_results <- lapply(gene_matrices, function(matrix) {
-  matrix <- as.matrix(matrix[,-1])
+
+get_top_contributor <- function(matrix) {
+  PAS_names <- matrix[[1]]
+  matrix <- as.matrix(matrix[, -1]) 
+  rownames(matrix) <- PAS_names
   if (nrow(matrix) >= 2 && ncol(matrix) >= 2) {
-    chisq.test(matrix)$p.value
+    chisq <- chisq.test(matrix)
+    # Compute contribution
+    contrib <- (chisq$observed - chisq$expected)^2 / chisq$expected
+    residuals <- chisq$residuals
+    # Filter only positive residuals
+    contrib[residuals <= 0] <- NA  # Remove non-positive residuals
+    # Handle edge case: No positive residuals
+    if (all(is.na(contrib))) {
+      return(tibble(
+        p_value = chisq$p.value,
+        TSS = NA,
+        PAS = NA,
+        contribution = NA,
+        residual = NA
+      ))
+    }
+    
+    # Get PAS (row) and TSS (column) names
+    max_idx <- which(contrib == max(contrib, na.rm = TRUE), arr.ind = TRUE)[1, , drop = FALSE]
+    result <- tibble(
+      p_value = chisq$p.value,
+      TSS = colnames(matrix)[max_idx[,"col"]],
+      PAS = rownames(matrix)[max_idx[,"row"]],
+      contribution = contrib[max_idx],
+      residual = residuals[max_idx]
+    )
+    
+    return(result)
   } else {
-    NA  
+    return(tibble(
+      p_value = NA,
+      TSS = NA,
+      PAS = NA,
+      contribution = NA,
+      residual = NA
+    ))
   }
-})
-chisq_df <- data.frame(
-  gene_id = names(chisq_results),
-  p_value = unlist(chisq_results),
-  stringsAsFactors = FALSE
-)
-chisq_df <- chisq_df[order(chisq_df$p_value), ]
+}
+
+
+top_contributors <- lapply(gene_matrices, get_top_contributor)
+top_contributors_df <- bind_rows(lapply(names(top_contributors), function(gene) {
+  top_contributors[[gene]] %>% mutate(gene_id = gene)
+}))
+top_contributors_df <- top_contributors_df[, c("gene_id", "p_value", "TSS", "PAS", "contribution", "residual")]
+top_contributors_df$tss_id <- paste0(top_contributors_df$gene_id,":",top_contributors_df$TSS)
+top_contributors_df$pas_id <- paste0(top_contributors_df$gene_id,":",top_contributors_df$PAS)
+top_contributors_df <- left_join(top_contributors_df,TSS.anno, by="tss_id")
+top_contributors_df <- left_join(top_contributors_df,pas.anno, by="pas_id")
+top_contributors_df$dominant_pair_coor <- paste(top_contributors_df$tss, top_contributors_df$pas, sep = "|")
+top_contributors_df$dominant_pair <- paste(top_contributors_df$TSS, top_contributors_df$PAS, sep = "-")
+top_contributors_df <- top_contributors_df[, c("gene_id", "p_value", "dominant_pair", "dominant_pair_coor", "contribution", "residual")]
+chisq_df <- top_contributors_df[order(top_contributors_df$p_value), ]
 chisq_df$FDR <- p.adjust(chisq_df$p_value, method = "BH")
 chisq_df$sig <- ifelse(chisq_df$FDR < 0.05, "TRUE", "FALSE")
 
@@ -246,3 +298,7 @@ chisq_df <- left_join(chisq_df,merged_data1, by="gene_id")
 chisq_df <- left_join(chisq_df,merged_data2, by="gene_id")
 
 write.table(chisq_df, output, sep="\t",quote=F,row.names = F)
+
+
+
+

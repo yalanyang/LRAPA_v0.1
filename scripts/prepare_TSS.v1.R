@@ -18,7 +18,7 @@ option_list <- list(
               help="Output TSS reference based on gtf file", metavar="file")
 )
 
-#Examples: Rscript prepare_TSS.v1.R -g /Users/yangyalan/results/Long-read-APA-pipeline/reference/gencode.v40.annotation_utr.sorted.gtf -o /Users/yangyalan/results/Long-read-APA-pipeline/reference/Human.encode.V40.TSS.ref.txt
+#Examples: Rscript prepare_TSS.v1.R -g gencode.v40.annotation_utr.sorted.gtf -o Human.encode.V40.TSS.ref.txt
 
 opt_parser <- OptionParser(option_list=option_list)
 opt <- parse_args(opt_parser)
