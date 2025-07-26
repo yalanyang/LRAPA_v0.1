@@ -3,7 +3,9 @@ option_list <- list(
   make_option(c("-i", "--bam_file"), type = "character", default = NULL, 
               help = "input BAM files", metavar = "character"),
   make_option(c("-s", "--se"), type="character", default=NULL,
-              help="Reference annotation gtf file", metavar="file")
+              help="Reference annotation gtf file", metavar="file"),
+  make_option(c("-o", "--output"), type="character", default="ASE_exon.diff.txt",
+              help="Output significant SEs", metavar="file"),
 )
 opt_parser <- OptionParser(option_list=option_list)
 opt <- parse_args(opt_parser)
@@ -11,7 +13,7 @@ se.anno <-opt$se
 output <- opt$output
 bam_files <- unlist(strsplit(opt$bam_files, ","))
 
-#Examples: Rscript ASE_exon.R -i bam/ENCFF164GLG_NM_reads.cast.spliced.bam,bam/ENCFF164GLG_NM_reads.b6.spliced.bam -g mm10.refExon.bed
+#Examples: Rscript ASE_exon_0.1.R -i B6/13.bam,SPRET/13.bam -s /Users/yangyalan/results/LRAPA_v0.1/references/SE/mouse.refSE_combine_gencode_refgene.txt -o S1_C13.ASE_exon.diff.txt
 
 library(GenomicRanges)
 library(dplyr)
