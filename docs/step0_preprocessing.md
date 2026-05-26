@@ -32,9 +32,9 @@ We next align the long-reads to the reference genome (FASTA format) with Minimap
 
 ``` shell
 bamtools convert -format fastq -in test.flnc.bam -out test.flnc.fastq
-minimap2  -ax splice -uf -C5 ref.genome.fa test.flnc.fastq > test.flnc.mapping.sam
-samtools view -O BAM -F 2052 -h test.flnc.mapping.sam |  samtools sort -O BAM -@ 7 -o test.flnc.unique.bam -
-samtools view -h test.flnc.unique.bam | awk '$10 != "*"' |samtools view -bS - > test.flnc.filter.bam
+minimap2 -ax splice -uf -C5 ref.genome.fa test.flnc.fastq > | \
+        samtools view -q 2 -F 2304 -Sb | \
+        samtools sort -o test.flnc.filter.bam
 ```
 
 ## 0.2. Single-cell long-read RNA-seq
@@ -53,26 +53,25 @@ We next align the long reads to the reference genome with pbmm2, as recommended 
 
 ``` shell
 pbmm2 align --preset ISOSEQ --sort test.tagged.refine.corrected.bam ref.genome.fa test.mapped.bam
-samtools view -O BAM -F 2052 -h test.mapped.sam |  samtools sort -O BAM -@ 7 -o test.unique.bam -
-samtools view -h test.unique.bam | awk '$10 != "*"' |samtools view -bS - > test.flnc.filter.bam
+samtools view -q 2 -F 2304 -Sb test.mapped.bam | samtools sort -o test.flnc.filter.bam
 ```
 
-## 0.3. Nonopore long-read RNA-seq
+## 0.3. Nanopore long-read RNA-seq
 
-LRAPA also accept Nonopore long-read RNA-seq for APA analysis. The raw Nanopore RNA-seq data (fast5) were first converted to BLOW5 files and then basecalled using Guppy to get fastq files.
+LRAPA also accept Nanopore long-read RNA-seq for APA analysis. The raw Nanopore RNA-seq data (fast5) were first converted to BLOW5 files and then basecalled using Guppy to get fastq files.
 
-**For Nanopore cDNA RNA-seq data**, the fastq files were aligned using Minimap2 with parameters \'-ax splice\' for alignments against the genome
+**For Nanopore cDNA RNA-seq data**, the fastq files were aligned using Minimap2 with parameters '-ax splice' for alignments against the genome
 
 ``` shell
-minimap2  -ax splice ref.genome.fa test.nonopore.cDNA.fastq > test.nonopore.cDNA.mapping.sam
-samtools view -O BAM -F 2052 -h test.nonopore.cDNA.mapping.sam |  samtools sort -O BAM -@ 7 -o test.nonopore.cDNA.unique.bam -
-samtools view -h test.nonopore.cDNA.unique.bam | awk '$10 != "*"' |samtools view -bS - > test.nonopore.cDNA.filter.bam
+minimap2 -ax splice ref.genome.fa test.nanopore.cDNA.fastq | \
+        samtools view -q 2 -F 2304 -Sb | \
+        samtools sort -o test.nanopore.cDNA.filter.bam
 ```
 
-**For Nonopore direct RNA-seq runs**, the additional parameters \'\--k14\' and \'\--uf\' were used as recommended by [minimap2](https://github.com/lh3/minimap2). 
+**For Nanopore direct RNA-seq runs**, the additional parameters '\--k14' and '\--uf' were used as recommended by [minimap2](https://github.com/lh3/minimap2). 
 
 ``` shell
-minimap2 -ax splice --k14 --uf ref.genome.fa test.nonopore.RNA.fastq > test.nonopore.RNA.mapping.sam
-samtools view -O BAM -F 2052 -h test.nonopore.RNA.mapping.sam |  samtools sort -O BAM -@ 7 -o test.nonopore.RNA.unique.bam -
-samtools view -h test.nonopore.RNA.unique.bam | awk '$10 != "*"' |samtools view -bS - > test.nonopore.RNA.filter.bam
+minimap2 -ax splice --k14 --uf ref.genome.fa test.nanopore.RNA.fastq | \
+        samtools view -q 2 -F 2304 -Sb | \
+        samtools sort -o test.nanopore.RNA.filter.bam
 ```
