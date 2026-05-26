@@ -22,4 +22,4 @@ dependencies:
   - python
   - lima=2.9.0
   - isoseq=4.0.0
-  - pbmm2=1.11.99
+  - pbmm2>=1.11

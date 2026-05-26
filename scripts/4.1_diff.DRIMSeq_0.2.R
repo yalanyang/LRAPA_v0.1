@@ -171,6 +171,6 @@ dpau_matrix$Note <- ifelse(dpau_matrix$dgDPAU > 0, "lengthen", "shorten")
 }
 res <- res %>% left_join(dpau_matrix, by ="gene_id")
 res <- res %>% left_join(merged_data, by ="gene_id")
-res$sig <- ifelse(abs(res$dgDPAU) >= 0.2 & res$adj_pvalue <= 0.05 , "TRUE", "FALSE")
+res$sig <- ifelse(abs(res$dgDPAU) >= 0.1 & res$adj_pvalue <= 0.05 , "TRUE", "FALSE")
 write.table(res, paste0(group1_sample, '_', group2_sample, '.', method, ".diff.DRIMSeq.txt"), sep = "\t", row.names = FALSE, quote = FALSE)
 }

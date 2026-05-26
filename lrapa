@@ -173,7 +173,7 @@ case "$function" in
             echo "                  -o, --output: Output TSS-exon coordination file (required)."
             exit 1
         fi
-        Rscript scripts/5_PAS_TSS_pair_V4.R "$@"
+        Rscript scripts/5_PAS_TSS_pair_V5.R "$@"
         ;;
     "couplingSE")
         if [ "$#" -lt 4 ]; then
@@ -187,7 +187,7 @@ case "$function" in
             echo "                  -o, --output: Output PAS-exon couplings file (required)."
             exit 1
         fi
-        Rscript scripts/5_PAS_exon_pair_V4.R "$@"
+        Rscript scripts/5_PAS_exon_pair_V5.R "$@"
         ;;
     
     *)
