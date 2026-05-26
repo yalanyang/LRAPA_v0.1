@@ -58,9 +58,9 @@ samtools view -q 2 -F 2304 -Sb test.mapped.bam | samtools sort -o test.flnc.filt
 
 ## 0.3. Nanopore long-read RNA-seq
 
-LRAPA also accept Nanopore long-read RNA-seq for APA analysis. The raw Nanopore RNA-seq data (fast5) were first converted to BLOW5 files and then basecalled using Guppy to get fastq files.
+LRAPA also accepts Nanopore long-read RNA-seq data for APA analysis. The raw data (fast5) are first converted to BLOW5 files and then basecalled using Guppy to get fastq files.
 
-**For Nanopore cDNA RNA-seq data**, the fastq files were aligned using Minimap2 with parameters '-ax splice' for alignments against the genome
+**For Nanopore cDNA RNA-seq**, the fastq files are aligned using Minimap2 with parameters '-ax splice' for alignments against the genome
 
 ``` shell
 minimap2 -ax splice ref.genome.fa test.nanopore.cDNA.fastq | \
@@ -68,7 +68,7 @@ minimap2 -ax splice ref.genome.fa test.nanopore.cDNA.fastq | \
         samtools sort -o test.nanopore.cDNA.filter.bam
 ```
 
-**For Nanopore direct RNA-seq runs**, the additional parameters '\--k14' and '\--uf' were used as recommended by [minimap2](https://github.com/lh3/minimap2). 
+**For Nanopore direct RNA-seq**, the additional parameters '\--k14' and '\--uf' are used as recommended by [minimap2](https://github.com/lh3/minimap2). 
 
 ``` shell
 minimap2 -ax splice --k14 --uf ref.genome.fa test.nanopore.RNA.fastq | \
