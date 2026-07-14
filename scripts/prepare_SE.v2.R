@@ -1,4 +1,4 @@
-## update: 11-13-2024 
+ls ## update: 11-13-2024 
 ## To remove genes from a GTF file where the distance between two or more of its non-overlapping transcripts exceeds 100 kb
 ## and remove genes that have transcripts in different strands, such as Gm2004 in mouse refgene.
 

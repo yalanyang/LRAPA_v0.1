@@ -19,7 +19,7 @@ For genes with two polyA sites, we used DPAU to quantify the percentage of DPAU 
 
 For genes or 3’-UTRs with two PAs, we used the distal polyA site usage index (DPAU) to quantify the PAU usage of each gene or 3'-UTR, which is the ratio of reads at distal PAs to the sum of reads at distal and proximal PAs. 
 
-For genes or 3'-UTRs with more than two PAs, generalized DPAU ([gDPAU](https://www.pnas.org/doi/10.1073/pnas.2113504119) was used to quantify the trend of distal PA usage for each gene or 3’-UTR as previous reported18. It is a location index weighted PAU of each PA. When n = 2, DPAU = gDPAU. DPAU and gDPAU ranges from 0 to 1, where higher values indicate a greater likelihood of distal PA usage within a gene or a 3'-UTR, and vice versa. 
+For genes or 3'-UTRs with more than two PAs, generalized DPAU ([gDPAU](https://www.pnas.org/doi/10.1073/pnas.2113504119) was used to quantify the trend of distal PA usage for each gene or 3’-UTR. It is a location index weighted PAU of each PA. When n = 2, DPAU = gDPAU. DPAU and gDPAU ranges from 0 to 1, where higher values indicate a greater likelihood of distal PA usage within a gene or a 3'-UTR, and vice versa. 
 
 ![](images/gDUAP.png)
 
