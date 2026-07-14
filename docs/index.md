@@ -11,3 +11,5 @@ permalink: /
 **Workflow of LRAPA:**
 
 ![](images/APA_workflow.png)
+
+[Return to the Github page](https://github.com/yalanyang/LRAPA_v0.1)
