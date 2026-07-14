@@ -17,7 +17,7 @@ isoseq3 refine test.fl.IsoSeqX_bc04_5p--IsoSeqX_3p.bam IsoSeq_v2_primers_12.fast
 
 **Note**: The IsoSeq_v2_primers_12.fasta file was download from [Pacbio](https://downloads.pacbcloud.com/public/dataset/Kinnex-full-length-RNA/REF-primers/)
 
-Then we convert the full-length bam file into sam format and run the [flip_reads.py](https://github.com/mortazavilab/ENCODE-references/tree/master) script to orient the reads to the correct strand (since lima\--ccs does not do this, recommend by [Encode long-read pipeline](https://www.encodeproject.org/documents/6d583a1d-d692-4511-b13b-c051822d861c/@@download/attachment/ENCODE%20Long%20Read%20RNA-Seq%20Analysis%20Pipeline%20v3.2%20%28Human%29.pdf)).
+Then we convert the full-length bam file into sam format and run the [flip_reads.py](https://github.com/mortazavilab/ENCODE-references/tree/master) script to orient the reads to the correct strand (since lima--ccs does not do this, recommend by [Encode long-read pipeline](https://www.encodeproject.org/documents/6d583a1d-d692-4511-b13b-c051822d861c/@@download/attachment/ENCODE%20Long%20Read%20RNA-Seq%20Analysis%20Pipeline%20v3.2%20%28Human%29.pdf)).
 
 ``` shell
 samtools view -h test.refine.bam > test.refine.sam
@@ -60,7 +60,7 @@ samtools view -q 2 -F 2304 -Sb test.mapped.bam | samtools sort -o test.flnc.filt
 
 LRAPA also accepts Nanopore long-read RNA-seq data for APA analysis. The raw data (fast5) are first converted to BLOW5 files and then basecalled using Guppy to get fastq files.
 
-**For Nanopore cDNA RNA-seq**, the fastq files are aligned using Minimap2 with parameters '-ax splice' for alignments against the genome
+**For Nanopore cDNA RNA-seq**, the fastq files are mapped using Minimap2 with parameters '-ax splice' for alignments against the genome
 
 ``` shell
 minimap2 -ax splice ref.genome.fa test.nanopore.cDNA.fastq | \
@@ -68,7 +68,7 @@ minimap2 -ax splice ref.genome.fa test.nanopore.cDNA.fastq | \
         samtools sort -o test.nanopore.cDNA.filter.bam
 ```
 
-**For Nanopore direct RNA-seq**, the additional parameters '\--k14' and '\--uf' are used as recommended by [minimap2](https://github.com/lh3/minimap2). 
+**For Nanopore direct RNA-seq**, the additional parameters '--k14' and '--uf' are used as recommended by [minimap2](https://github.com/lh3/minimap2). 
 
 ``` shell
 minimap2 -ax splice --k14 --uf ref.genome.fa test.nanopore.RNA.fastq | \
