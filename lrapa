@@ -94,7 +94,7 @@ case "$function" in
             echo "                  -b, --batch_size: Number of reads to process in each batch (default: 10000)."    
             exit 1
         fi
-        Rscript scripts/1_get_PAS_reads.0.2.R "$@"
+        Rscript scripts/1_get_PAS_reads.1.0.R "$@"
         ;;
     "anno")
         if [ "$#" -lt 5 ]; then
@@ -109,7 +109,7 @@ case "$function" in
             echo "                  -o, --output: Output PAS bed file with header (required)."
             exit 1
         fi
-        Rscript scripts/2_PAS_identification_Annotation_0.3.R "$@"
+        Rscript scripts/2_PAS_identification_Annotation.1.0.R "$@"
         ;;
     "count")
         if [ "$#" -lt 3 ]; then
@@ -121,7 +121,7 @@ case "$function" in
             echo "                  -o, --output: Output text file for the count matrix (required)."
             exit 1
         fi
-        Rscript scripts/3_PAS_count_Per_sample.R "$@"
+        Rscript scripts/3_PAS_count_Per_sample.1.0.R "$@"
         ;;
     "diff")
         if [ "$#" -lt 4 ]; then
@@ -134,7 +134,7 @@ case "$function" in
             echo "                  -n, --group2: Group 2 for differential analysis (required)."
         exit 1
         fi
-        Rscript scripts/4.1_diff.DRIMSeq_0.2.R "$@"
+        Rscript scripts/4.1_diff.DRIMSeq.1.0.R "$@"
         ;;
     "norepdiff")
         if [ "$#" -lt 4 ]; then
@@ -146,7 +146,7 @@ case "$function" in
             echo "                  -n, --group2: Sample 2 for differential analysis (required)."   
             exit 1
         fi
-        Rscript scripts/4.0_DE_test.norep_0.3.R "$@"
+        Rscript scripts/4.0_DE_test.norep.1.0.R "$@"
         ;;
     "scCount")
         if [ "$#" -lt 4 ]; then
@@ -159,7 +159,7 @@ case "$function" in
             echo "                  -w, --barcode: Hitlist barcodes (required)."
             exit 1
         fi
-        Rscript scripts/3_PAS_count_sc_sample_0.3.R "$@"
+        Rscript scripts/3_PAS_count_sc_sample.1.0.R "$@"
         ;;
     "couplingTSS")
         if [ "$#" -lt 4 ]; then
@@ -173,7 +173,7 @@ case "$function" in
             echo "                  -o, --output: Output TSS-exon coordination file (required)."
             exit 1
         fi
-        Rscript scripts/5_PAS_TSS_pair_V5.R "$@"
+        Rscript scripts/5_PAS_TSS_pair.1.0.R "$@"
         ;;
     "couplingSE")
         if [ "$#" -lt 4 ]; then
@@ -187,7 +187,7 @@ case "$function" in
             echo "                  -o, --output: Output PAS-exon couplings file (required)."
             exit 1
         fi
-        Rscript scripts/5_PAS_exon_pair_V5.R "$@"
+        Rscript scripts/5_PAS_exon_pair.1.0.R "$@"
         ;;
     
     *)
