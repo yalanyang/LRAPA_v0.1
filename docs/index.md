@@ -12,4 +12,4 @@ permalink: /
 
 ![](images/APA_workflow.png)
 
-[Return to the Github page](https://github.com/yalanyang/LRAPA_v0.1)
+[Return to the MAIN page](https://github.com/yalanyang/LRAPA_v0.1)
