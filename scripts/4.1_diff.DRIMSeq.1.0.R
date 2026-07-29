@@ -57,9 +57,7 @@ calculate_MPRO <- function(counts) {
            PAU2 = group2 / sum(group2, na.rm = TRUE)) %>%
      ungroup()
   
-  ## dPAU
   counts_MPRO$dPAU <- counts_MPRO$PAU1 - counts_MPRO$PAU2
-  ## MPRO
   MPRO <- counts_MPRO %>%
     group_by(gene_id) %>%
     reframe({

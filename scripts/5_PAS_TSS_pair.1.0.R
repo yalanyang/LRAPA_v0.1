@@ -21,7 +21,7 @@ option_list <- list(
   make_option(c("-p", "--pas"), type="character", default=NULL,
               help="Reference polyA.bed", metavar="file")
 )
-#Examples: Rscript 5_PAS_TSS_pair_V5.R -i Encode_adult/encode.mapping.unique.filter.bam -s ../prepare_TSS/Human.hg38.refTSS.combine.txt -p Encode_adult/Encode.brain.new.PAS.bed -o TSS-TES.encode.coordination.chiqtest.0617.txt
+#Examples: Rscript 5_PAS_TSS_pair.1.0.R -i test.mapped.bam -s refTSS.txt -p test.PAS.bed -o TSS-TES.coupling.txt
 opt_parser <- OptionParser(option_list=option_list)
 opt <- parse_args(opt_parser)
 bam <- opt$input
